@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>京阪9日之旅規劃器</title>
+    <!-- 載入 Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        /* 針對 Day Button 的激活狀態 */
+        .day-btn {
+            background-color: #e5e7eb; /* 預設為淺灰色 */
+            color: #4b5563;
+            transition: all 0.2s ease;
+        }
+        .day-btn:hover {
+            background-color: #d1d5db;
+        }
+        .day-btn.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+            font-weight: bold;
+        }
+        /* 針對 Static Tab Button 的激活狀態 */
+        .tab-btn.active {
+            background-color: #10b981; /* emerald-500 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.5);
+        }
+        /* Day Selector 確保 9 個按鈕在單一版面顯示 */
+        #day-tabs {
+            display: grid;
+            grid-template-columns: repeat(9, minmax(0, 1fr));
+            gap: 4px;
+            padding: 4px;
+        }
+        /* 美化行程卡片 */
+        #itinerary-content > div {
+            border-left: 5px solid #a5b4fc; /* 淺藍色邊條 */
+        }
+        /* 每日花費總計區域的樣式 */
+        .daily-cost-bar {
+            background: linear-gradient(to right, #fef9c3, #fef08a);
+            border-bottom: 1px solid #fde047;
+        }
+        /* 整趟旅程花費總計區域的樣式 */
+        .trip-cost-bar {
+            background: linear-gradient(to right, #e0e7ff, #c7d2fe);
+            border-top: 1px solid #a5b4fc;
+        }
+        /* Modal 動畫 */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 200ms ease-out, transform 200ms ease-out;
+        }
+        .modal-exit {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 150ms ease-in, transform 150ms ease-in;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-0 m-0 pb-16">
+
+    <div class="max-w-xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden my-4 md:my-8 relative min-h-screen">
+        <!-- Header: 美化後的頂部，包含語言切換按鈕 -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white rounded-t-lg shadow-lg relative">
+            <div class="flex flex-col items-center">
+                <h1 id="app-title" class="text-3xl font-extrabold tracking-wide">⛩️ 京阪9日之旅 🏯</h1>
+                <p id="app-subtitle" class="text-sm opacity-90 mt-1">9天8夜自由行</p>
+            </div>
+            <!-- 語言切換按鈕 -->
+            <button id="lang-toggle" onclick="toggleLanguage()" class="absolute top-3 right-3 bg-white text-indigo-600 hover:bg-indigo-100 text-xs font-bold py-1 px-2.5 rounded-full shadow-md transition-colors">
+                日文
+            </button>
+        </div>
+
+        <!-- Main Navigation Tabs -->
+        <div class="sticky top-0 bg-white border-b shadow-sm z-10">
+            <!-- 1. Day Selector (9個按鈕固定一列) -->
+            <div id="day-tabs" class="border-b border-gray-100">
+                <!-- Day buttons will be generated here by JavaScript -->
+            </div>
+            
+            <!-- 2. Static Tabs (天氣、清單等) -->
+            <div class="flex justify-around p-2 text-xs bg-gray-50 border-t">
+                <button id="tab-weather" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors" data-section="weather" onclick="showSection('weather'); fetchWeather()">
+                    ☀️ 即時天氣
+                </button>
+                <button id="tab-notes" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors" data-section="notes" onclick="showSection('notes')">
+                    📝 注意事項
+                </button>
+                <button id="tab-checklist" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors" data-section="checklist" onclick="showSection('checklist')">
+                    🎒 必買清單
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div id="content-container" class="p-4 mb-12">
+
+            <!-- 1. 每日行程細節 (Dynamic Content) -->
+            <div id="daily-itinerary-detail" class="section">
+                <h2 id="itinerary-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2"></h2>
+                <div id="itinerary-content" class="space-y-3 pb-4">
+                    <!-- Day content will be loaded here, styled as individual cards -->
+                </div>
+                
+                <!-- 花費總計區塊 (固定在行程列表下方) -->
+                <div id="cost-summary-container" class="mt-6 rounded-xl shadow-md overflow-hidden">
+                    <!-- 今日花費 -->
+                    <div class="p-4 daily-cost-bar flex justify-between items-center text-yellow-900">
+                        <span class="font-bold text-lg" id="label-daily-total">💰 今日花費總金額：</span>
+                        <span id="daily-total-amount" class="font-extrabold text-2xl">0</span>
+                    </div>
+                    <!-- 整趟旅程花費 -->
+                    <div class="p-4 trip-cost-bar flex justify-between items-center text-indigo-900">
+                        <span class="font-bold text-lg" id="label-trip-total">💎 整趟旅程總金額：</span>
+                        <span id="trip-total-amount" class="font-extrabold text-2xl text-indigo-700">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 即時天氣 (Weather) -->
+            <div id="weather" class="section hidden">
+                <h2 id="weather-section-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">京都・大阪 天氣預報</h2>
+                <div class="bg-blue-50 p-4 rounded-xl shadow-md">
+                    <p id="weather-source" class="text-sm text-blue-700 mb-3">資料來源：網路即時查詢 (使用 Google Search Grounding)</p>
+                    <div id="weather-output" class="text-gray-700 leading-relaxed min-h-24 flex items-center justify-center">
+                        <div id="weather-loading" class="text-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="loading-text">正在查詢天氣資訊...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 重要注意事項 (Notes) -->
+            <div id="notes" class="section hidden">
+                <h2 id="notes-section-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">重要注意事項</h2>
+                <ul class="list-disc list-inside space-y-2 text-gray-700" id="notes-list">
+                    <!-- Notes will be rendered here -->
+                </ul>
+            </div>
+
+            <!-- 4. 必買必帶清單 (Checklist) -->
+            <div id="checklist" class="section hidden">
+                <h2 id="checklist-section-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">必買必帶清單</h2>
+                <h3 id="checklist-bring-title" class="font-semibold text-lg mt-4 mb-2 text-green-700">【必帶物品】</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700" id="bring-list">
+                    <!-- Bring List will be rendered here -->
+                </ul>
+                <h3 id="checklist-buy-title" class="font-semibold text-lg mt-4 mb-2 text-pink-700">【必買紀念品/美食】</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-700" id="buy-list">
+                    <!-- Buy List will be rendered here -->
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 自定義輸入金額 Modal -->
+    <div id="cost-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-80 transform transition-all scale-100 modal-enter-active">
+            <h3 class="text-lg font-bold text-gray-800 mb-4" id="modal-title">輸入花費金額</h3>
+            <p class="text-sm text-gray-500 mb-2">請輸入數字，若要刪除請留空。</p>
+            <input type="number" id="cost-input" class="w-full p-3 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-lg" placeholder="例如: 1000" inputmode="numeric">
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">取消</button>
+                <button onclick="confirmCost()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-bold shadow-md">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數 for API 呼叫
+        const apiKey = ""; 
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        
+        // 全域語言狀態
+        let currentLang = 'zh';
+
+        // 花費數據存儲 (格式: { 'day_1_item_0': 1500, 'day_2_item_3': 500 })
+        let costData = {};
+        
+        // 暫存編輯中的項目索引
+        let currentEditContext = { dayIndex: null, itemIndex: null };
+
+        // 國際化 (i18n) 靜態文字數據
+        const i18n = {
+            zh: {
+                app_title: '⛩️ 京阪9日之旅 🏯',
+                app_subtitle: '9天8夜自由行',
+                btn_day_prefix: '第',
+                btn_day_suffix: '天',
+                tab_weather: '☀️ 即時天氣',
+                tab_notes: '📝 注意事項',
+                tab_checklist: '🎒 必買清單',
+                section_weather_title: '京都・大阪 天氣預報',
+                section_weather_source: '資料來源：網路即時查詢 (使用 Google Search Grounding)',
+                section_notes_title: '重要注意事項',
+                section_checklist_title: '必買必帶清單',
+                checklist_bring_title: '【必帶物品】',
+                checklist_buy_title: '【必買紀念品/美食】',
+                itinerary_theme_prefix: '主題：',
+                nav_button: '導航',
+                cost_button: '花費',
+                cost_display_prefix: '花費金額：',
+                total_cost_label: '💰 今日花費總金額：',
+                trip_total_label: '💎 整趟旅程總金額：',
+                modal_title: '輸入花費金額',
+                modal_desc: '請輸入數字，若要刪除請留空。',
+                modal_cancel: '取消',
+                modal_confirm: '確定',
+                loading_text: '正在查詢天氣資訊...',
+                error_text: '天氣資訊查詢失敗。請稍後再試或檢查網路連線。',
+                weather_latest_info: '【最新天氣資訊】'
+            },
+            ja: {
+                app_title: '⛩️ 京阪9日の旅 🏯',
+                app_subtitle: '9泊8日の自由旅行',
+                btn_day_prefix: '第',
+                btn_day_suffix: '日',
+                tab_weather: '☀️ リアルタイム天気',
+                tab_notes: '📝 注意事項',
+                tab_checklist: '🎒 持ち物・買い物リスト',
+                section_weather_title: '京都・大阪 天気予報',
+                section_weather_source: '情報源：リアルタイムインターネット検索',
+                section_notes_title: '重要な注意事項',
+                section_checklist_title: '持ち物・買い物リスト',
+                checklist_bring_title: '【持っていくもの】',
+                checklist_buy_title: '【お土産・グルメ】',
+                itinerary_theme_prefix: 'テーマ：',
+                nav_button: 'ナビ',
+                cost_button: '費用',
+                cost_display_prefix: '費用：',
+                total_cost_label: '💰 本日の合計費用：',
+                trip_total_label: '💎 旅行の総費用：',
+                modal_title: '費用を入力',
+                modal_desc: '数字を入力してください。削除するには空のままにしてください。',
+                modal_cancel: 'キャンセル',
+                modal_confirm: '確定',
+                loading_text: '天気情報を検索中...',
+                error_text: '天気情報の取得に失敗しました。後でもう一度お試しください。',
+                weather_latest_info: '【最新の天気情報】'
+            }
+        };
+
+        // --- 旅遊數據定義 (Data Definitions) ---
+
+        const itineraryData = [
+            null, 
+            { day: 1, location: "京都：抵達與安頓", theme: "歡迎來到古都！交通與入住", location_ja: "京都：到着と宿泊", theme_ja: "古都へようこそ！交通とチェックイン", details: [
+                {zh: "🛫 關西機場抵達", ja: "🛫 関西国際空港に到着"}, 
+                {zh: "🚅 搭乘 HARUKA 前往京都車站", ja: "🚅 HARUKAで京都駅へ移動"},
+                {zh: "🚆 搭乘京都奈良線到東福寺站", ja: "🚆 京都奈良線で東福寺駅へ"}, 
+                {zh: "🏠 Oyado tofukuji民宿 (住宿地址: 7-29 Fukuine Goshonouchicho, Higashiyama Ward, Kyoto, 605-0987日本)", ja: "🏠 お宿 東福寺 (宿泊先)"},
+                {zh: "🛍️ 閒逛：東福寺周邊適應環境", ja: "🛍️ 散策：東福寺周辺で環境に慣れる"},
+                {zh: "🍽️ 晚餐：京都車站周邊", ja: "🍽️ 夕食：京都駅周辺"}
+            ] },
+            { day: 2, location: "京都：經典東山", theme: "清水寺與二年坂、三年坂散策", location_ja: "京都：定番の東山", theme_ja: "清水寺と二年坂・三年坂を散策", details: [
+                {zh: "🏯 上午：清水寺 (必拍景點)", ja: "🏯 午前：清水寺（撮影スポット）"}, 
+                {zh: "🛍️ 上午：二年坂、三年坂 (購買紀念品)", ja: "🛍️ 午前：二年坂・三年坂（お土産購入）"}, 
+                {zh: "🥢 午餐：東山周邊特色料理", ja: "🥢 昼食：東山周辺の郷土料理"}, 
+                {zh: "⛩️ 下午：高台寺或八坂神社參拜", ja: "⛩️ 午後：高台寺または八坂神社を参拝"}, 
+                {zh: "🚶 傍晚：沿著鴨川散步回飯店", ja: "🚶 夕方：鴨川沿いを散歩してホテルへ"}
+            ] },
+            { day: 3, location: "京都：竹林與金閣", theme: "自然風光與歷史建築", location_ja: "京都：竹林と金閣", theme_ja: "自然の風景と歴史的建築", details: [
+                {zh: "🎋 上午：嵐山竹林之道 (清晨前往避開人潮)", ja: "🎋 午前：嵐山竹林の道（早朝がおすすめ）"}, 
+                {zh: "🕌 上午：天龍寺 (世界遺產)", ja: "🕌 午前：天龍寺（世界遺産）"}, 
+                {zh: "🍲 午餐：嵐山周邊湯豆腐料理", ja: "🍲 昼食：嵐山周辺の湯豆腐料理"}, 
+                {zh: "✨ 下午：金閣寺 (鹿苑寺) 欣賞金色倒影", ja: "✨ 午後：金閣寺（鹿苑寺）で金色の映り込みを鑑賞"}, 
+                {zh: "⛩️ 傍晚：北野天滿宮 (如時間允許)", ja: "⛩️ 夕方：北野天満宮（時間があれば）"}
+            ] },
+            { day: 4, location: "京都/奈良：千本鳥居與鹿", theme: "壯觀神社與可愛動物", location_ja: "京都/奈良：千本鳥居と鹿", theme_ja: "壮大な神社と可愛い動物たち", details: [
+                {zh: "⛩️ 上午：伏見稻荷大社 (挑戰千本鳥居)", ja: "⛩️ 午前：伏見稲荷大社（千本鳥居を体験）"}, 
+                {zh: "🍢 午餐：伏見稻荷周邊小吃", ja: "🍢 昼食：伏見稲荷周辺の軽食"}, 
+                {zh: "🦌 下午：搭乘 JR 前往奈良", ja: "🦌 午後：JRで奈良へ移動"}, 
+                {zh: "🐘 奈良：東大寺 (大佛殿) 與奈良公園餵鹿", ja: "🐘 奈良：東大寺（大仏殿）と奈良公園で鹿と触れ合う"}, 
+                {zh: "🍽️ 晚餐：奈良特色料理後返回京都", ja: "🍽️ 夕食：奈良の郷土料理を堪能後、京都へ戻る"}
+            ] },
+            { day: 5, location: "大阪：轉換陣地與空中夜景", theme: "移動日與大阪都市魅力", location_ja: "大阪：移動と空中庭園", theme_ja: "移動日と大阪の都市の魅力", details: [
+                {zh: "🚄 上午：退房並搭乘 JR/新幹線前往大阪", ja: "🚄 午前：チェックアウトし、JR/新幹線で大阪へ移動"}, 
+                {zh: "🏨 大阪飯店 Check-in", ja: "🏨 大阪のホテルにチェックイン"}, 
+                {zh: "🍽️ 午餐：新大阪或梅田周邊", ja: "🍽️ 昼食：新大阪または梅田周辺"}, 
+                {zh: "🛍️ 下午：梅田周邊購物 (大丸、阪急百貨)", ja: "🛍️ 午後：梅田周辺でショッピング（大丸、阪急百貨店）"}, 
+                {zh: "🌃 傍晚：梅田藍天大廈 (空中庭園展望台) 欣賞夕陽與夜景", ja: "🌃 夕方：梅田スカイビル（空中庭園展望台）で夕日と夜景を鑑賞"}, 
+                {zh: "🍻 晚餐：梅田附近居酒屋", ja: "🍻 夕食：梅田近くの居酒屋"}
+            ] },
+            { day: 6, location: "大阪：歷史與懷舊", theme: "大阪的歷史地標與復古街區", location_ja: "大阪：歴史とレトロな街並み", theme_ja: "大阪の歴史的ランドマークとレトロなエリア", details: [
+                {zh: "🏰 上午：大阪城公園與天守閣 (了解豐臣秀吉歷史)", ja: "🏰 午前：大阪城公園と天守閣（豊臣秀吉の歴史を学ぶ）"}, 
+                {zh: "🍽️ 午餐：大阪城周邊", ja: "🍽️ 昼食：大阪城周辺"}, 
+                {zh: "⛩️ 下午：大阪天滿宮 (祈求學業)", ja: "⛩️ 午後：大阪天満宮（学業成就を祈願）"}, 
+                {zh: "🗼 傍晚：新世界與通天閣 (感受舊大阪風情)", ja: "🗼 夕方：新世界と通天閣（古き良き大阪の雰囲気を体験）"}, 
+                {zh: "🍢 晚餐：嘗試串炸料理", ja: "🍢 夕食：串カツ料理を試す"}
+            ] },
+            { day: 7, location: "大阪：美食購物天堂", theme: "心齋橋與道頓堀的熱鬧氛圍", location_ja: "大阪：グルメとショッピング天国", theme_ja: "心斎橋と道頓堀のにぎやかな雰囲気", details: [
+                {zh: "🐟 上午：黑門市場 (大阪人的廚房，品嘗新鮮海產)", ja: "🐟 午前：黒門市場（大阪の台所、新鮮な海産物を味わう）"}, 
+                {zh: "🍣 午餐：在市場內解決", ja: "🍣 昼食：市場内で済ませる"}, 
+                {zh: "🛍️ 下午：心齋橋筋商店街 (購物血拼)", ja: "🛍️ 午後：心斎橋筋商店街（ショッピングを満喫）"}, 
+                {zh: "🏃 傍晚：道頓堀 (觀看固力果跑跑人招牌)", ja: "🏃 夕方：道頓堀（グリコのランナー看板を見る）"}, 
+                {zh: "🐙 晚餐：大阪燒、章魚燒、金龍拉麵等在地美食巡禮", ja: "🐙 夕食：お好み焼き、たこ焼き、金龍ラーメンなどの地元グルメ巡り"}
+            ] },
+            { day: 8, location: "大阪：環球影城", theme: "一整天的歡樂與刺激", location_ja: "大阪：ユニバーサル・スタジオ・ジャパン", theme_ja: "一日中楽しさとスリルを満喫", details: [
+                {zh: "🎢 全日：日本環球影城 (USJ)", ja: "🎢 終日：ユニバーサル・スタジオ・ジャパン (USJ)"}, 
+                {zh: "🍄 必玩：超級任天堂世界 (Super Nintendo World)、哈利波特魔法世界", ja: "🍄 必須プレイ：スーパー・ニンテンドー・ワールド、ウィザーディング・ワールド・オブ・ハリー・ポッター"}, 
+                {zh: "🍔 午餐/晚餐：在園區內解決", ja: "🍔 昼食/夕食：パーク内で済ませる"}, 
+                {zh: "🎟️ 備註：建議提前購買快速通關票", ja: "🎟️ 備考：ユニバーサル・エクスプレス・パスの事前購入を推奨"}
+            ] },
+            { day: 9, location: "大阪：血拼與返程", theme: "最後購物與甜蜜歸途", location_ja: "大阪：最終ショッピングと帰路", theme_ja: "最後のお土産購入と帰国", details: [
+                {zh: "🛍️ 上午：根據航班時間安排最後購物，例如難波或 Rinku Premium Outlets (臨空城)", ja: "🛍️ 午前：フライト時間に合わせて最終ショッピング（例：難波、りんくうプレミアム・アウトレット）"}, 
+                {zh: "🍜 午餐：最後的日式午餐", ja: "🍜 昼食：最後の和食ランチ"}, 
+                {zh: "🛄 下午：前往關西國際機場(KIX)或伊丹機場(ITM)", ja: "🛄 午後：関西国際空港(KIX)または伊丹空港(ITM)へ移動"}, 
+                {zh: "👋 辦理登機手續，搭機返回", ja: "👋 チェックイン手続き後、帰国"}
+            ] }
+        ];
+
+        const notesData = {
+            zh: [
+                "交通：建議購買 ICOCA 或 Suica 等交通卡，方便搭乘地鐵和巴士。",
+                "公車：京都市內主要景點多靠公車，可考慮購買一日券 (但需評估是否搭乘超過 3 趟)。",
+                "現金：雖然日本許多地方可刷卡，但小型店家或寺廟仍需現金，建議備足。",
+                "WiFi：租借行動 WiFi 或購買 SIM 卡，確保導航順暢。",
+                "禮儀：參拜神社或寺廟時，注意洗手、漱口等正確步驟，保持安靜與尊重。",
+                "環保：日本垃圾分類嚴格，請務必將垃圾帶回飯店或找到正確的分類垃圾桶。",
+                "退稅：大型百貨公司消費滿額可退稅，記得攜帶護照隨時辦理。"
+            ],
+            ja: [
+                "交通：ICOCAやSuicaなどの交通系ICカードの購入をおすすめします。地下鉄やバスの乗車に便利です。",
+                "バス：京都市内の主要な観光地はバス移動が中心です。一日乗車券の購入を検討しましょう（3回以上の乗車で元が取れます）。",
+                "現金：多くの場所でカード利用が可能ですが、小さなお店や寺社では現金が必要な場合があるため、準備しておきましょう。",
+                "WiFi：モバイルWiFiをレンタルするかSIMカードを購入し、ナビゲーションがスムーズに行えるようにしましょう。",
+                "マナー：神社仏閣を参拝する際は、手水や手洗いの作法を守り、静かに、敬意をもって行動しましょう。",
+                "環境：日本のゴミの分別は厳格です。ゴミはホテルに持ち帰るか、正しい分別ゴミ箱を見つけて捨てましょう。",
+                "免税：大きなデパートでは消費税が免除されます。パスポートを忘れずに携帯し、随時手続きを行いましょう。"
+            ]
+        };
+
+        const bringListData = {
+            zh: [
+                "護照、簽證 (如適用) 及影本",
+                "機票、飯店預約單電子檔/紙本",
+                "日幣現金與信用卡",
+                "手機、充電線、行動電源、日規轉接頭 (A型插頭)",
+                "輕便衣物、舒適好走的鞋 (每天大量步行)",
+                "雨具 (雨傘/雨衣)，以防突發降雨",
+                "常備藥品 (感冒藥、腸胃藥、止痛藥)"
+            ],
+            ja: [
+                "パスポート、ビザ（必要な場合）とそのコピー",
+                "航空券、ホテル予約の電子ファイル／紙の控え",
+                "日本円の現金とクレジットカード",
+                "スマートフォン、充電ケーブル、モバイルバッテリー、日本規格の変換プラグ（A型プラグ）",
+                "動きやすい服装と歩きやすい靴（毎日たくさん歩きます）",
+                "雨具（傘やレインコート）、突然の雨に備えて",
+                "常備薬（風邪薬、胃腸薬、鎮痛剤など）"
+            ]
+        };
+
+        const buyListData = {
+            zh: [
+                "京都：宇治抹茶製品、生八橋、吸油面紙 (優佳雅)",
+                "大阪：固力果周邊商品、大阪燒/章魚燒調理包、Bâton d'or (Pocky 升級版)",
+                "藥妝店：各種保健食品、美妝保養品、休足時間",
+                "電器：吹風機、保溫杯等 (注意電壓與保固)"
+            ],
+            ja: [
+                "京都：宇治抹茶製品、生八ッ橋、あぶらとり紙（よーじや）",
+                "大阪：グリコ関連グッズ、お好み焼き・たこ焼き調理セット、バトンドール（高級ポッキー）",
+                "ドラッグストア：各種健康食品、コスメ、休足時間",
+                "電化製品：ドライヤー、魔法瓶など（電圧と保証に注意）"
+            ]
+        };
+
+
+        // --- 核心功能 (Core Functions) ---
+
+        /**
+         * Utility function to extract location name for Maps query.
+         */
+        function extractLocationName(detail) {
+            let cleanedDetail = detail.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}/gu, '').trim(); 
+            
+            const prefixes = [
+                "上午：", "下午：", "午餐：", "晚餐：", "傍晚：", "晚上：", 
+                "必玩：", "全日：", "備註：", "例如：", "必備：", "必去：",
+                "搭乘 HARUKA 前往", "搭乘京都奈良線到",
+                "午前：", "午後：", "昼食：", "夕食：", "夕方：", "終日：", "備考：",
+                "で京都駅へ移動", "で東福寺駅へ"
+            ];
+            for (const prefix of prefixes) {
+                if (cleanedDetail.startsWith(prefix)) {
+                    cleanedDetail = cleanedDetail.substring(prefix.length).trim();
+                    break;
+                }
+            }
+            cleanedDetail = cleanedDetail.replace(/\((.*?)\)/g, '').trim();
+            cleanedDetail = cleanedDetail.replace("日本環球影城", "環球影城"); 
+            cleanedDetail = cleanedDetail.replace("ユニバーサル・スタジオ・ジャパン", "USJ"); 
+            return cleanedDetail;
+        }
+
+        /**
+         * Function to determine if a detail item needs a navigation button.
+         */
+        function requiresNavigation(locationName, textContent) {
+            const excludes = ['晚餐', '午餐', '閒逛', '抵達', '辦理登機', '搭機返回', '夕食', '昼食', '散策', '到着', 'チェックイン'];
+            const location_is_key = locationName.includes('機場') || locationName.includes('車站') || locationName.includes('民宿') || locationName.includes('飯店') || locationName.includes('東福寺駅');
+
+            if (location_is_key) {
+                return true;
+            }
+
+            if (excludes.some(ex => textContent.includes(ex))) {
+                return false;
+            }
+
+            if (locationName.length > 3) {
+                return true;
+            }
+            return false;
+        }
+
+        // 1. 渲染所有靜態 UI 文字
+        function updateStaticTexts(lang) {
+            const texts = i18n[lang];
+
+            document.getElementById('app-title').innerHTML = texts.app_title;
+            document.getElementById('app-subtitle').textContent = texts.app_subtitle;
+            document.getElementById('lang-toggle').textContent = lang === 'zh' ? '日文' : '中文';
+
+            document.getElementById('tab-weather').innerHTML = texts.tab_weather;
+            document.getElementById('tab-notes').innerHTML = texts.tab_notes;
+            document.getElementById('tab-checklist').innerHTML = texts.tab_checklist;
+
+            document.getElementById('weather-section-title').textContent = texts.section_weather_title;
+            document.getElementById('weather-source').textContent = texts.section_weather_source;
+            document.getElementById('notes-section-title').textContent = texts.section_notes_title;
+            document.getElementById('checklist-section-title').textContent = texts.section_checklist_title;
+            document.getElementById('checklist-bring-title').textContent = texts.checklist_bring_title;
+            document.getElementById('checklist-buy-title').textContent = texts.checklist_buy_title;
+
+            document.getElementById('loading-text').textContent = texts.loading_text;
+            
+            // Modal texts
+            document.getElementById('modal-title').textContent = texts.modal_title;
+            document.querySelector('#cost-modal p').textContent = texts.modal_desc;
+            document.querySelector('#cost-modal button:first-child').textContent = texts.modal_cancel;
+            document.querySelector('#cost-modal button:last-child').textContent = texts.modal_confirm;
+
+            renderStaticSections(lang);
+
+            const currentActiveDay = document.querySelector('.day-btn.active');
+            if (currentActiveDay) {
+                showDay(parseInt(currentActiveDay.dataset.day));
+            } else {
+                const currentSectionId = document.querySelector('.tab-btn.active')?.dataset.section || 'daily-itinerary-detail';
+                showSection(currentSectionId);
+            }
+            
+            renderDayButtons();
+            
+            if (currentActiveDay) {
+                document.querySelector(`.day-btn[data-day="${currentActiveDay.dataset.day}"]`)?.classList.add('active');
+            }
+        }
+        
+        // 2. 切換語言
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'ja' : 'zh';
+            updateStaticTexts(currentLang);
+        }
+
+        // 3. Modal 相關功能
+        function openCostModal(dayIndex, itemIndex) {
+            const modal = document.getElementById('cost-modal');
+            const input = document.getElementById('cost-input');
+            const key = `day_${dayIndex}_item_${itemIndex}`;
+            
+            currentEditContext = { dayIndex, itemIndex };
+            input.value = costData[key] || "";
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('cost-modal');
+            modal.classList.add('hidden');
+            currentEditContext = { dayIndex: null, itemIndex: null };
+        }
+
+        function confirmCost() {
+            const input = document.getElementById('cost-input');
+            const { dayIndex, itemIndex } = currentEditContext;
+            const key = `day_${dayIndex}_item_${itemIndex}`;
+            
+            let val = input.value;
+            // 轉換全形數字
+            val = val.replace(/[０-９]/g, function(s) {
+                return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+            });
+
+            const amount = parseFloat(val);
+            if (!isNaN(amount)) {
+                costData[key] = amount;
+            } else if (val.trim() === "") {
+                delete costData[key];
+            }
+            
+            closeModal();
+            showDay(dayIndex); // 更新畫面
+        }
+
+        // 4. 計算每日總花費
+        function calculateDailyTotal(dayIndex) {
+            let total = 0;
+            const dayData = itineraryData[dayIndex];
+            dayData.details.forEach((_, index) => {
+                const key = `day_${dayIndex}_item_${index}`;
+                if (costData[key]) {
+                    total += costData[key];
+                }
+            });
+            return total;
+        }
+
+        // 5. 計算整趟旅程總花費
+        function calculateTripTotal() {
+            let total = 0;
+            for (const key in costData) {
+                if (costData.hasOwnProperty(key)) {
+                    total += costData[key];
+                }
+            }
+            return total;
+        }
+
+
+        // 6. 渲染每日行程按鈕
+        function renderDayButtons() {
+            const dayTabsContainer = document.getElementById('day-tabs');
+            let buttonsHtml = '';
+            const prefix = i18n[currentLang].btn_day_prefix;
+            const suffix = i18n[currentLang].btn_day_suffix;
+
+            for (let i = 1; i <= 9; i++) {
+                buttonsHtml += `
+                    <button 
+                        class="day-btn text-xs py-2 font-medium transition-colors rounded-lg"
+                        data-day="${i}"
+                        onclick="showDay(${i})"
+                    >
+                        ${prefix}${i}${suffix}
+                    </button>
+                `;
+            }
+            dayTabsContainer.innerHTML = buttonsHtml;
+        }
+        
+        // 7. 顯示特定一天的行程細節 (含按鈕互換與靠右)
+        function showDay(dayIndex) {
+            const day = itineraryData[dayIndex];
+            const titleElement = document.getElementById('itinerary-title');
+            const contentElement = document.getElementById('itinerary-content');
+            
+            const dailyTotalElement = document.getElementById('daily-total-amount');
+            const dailyTotalLabel = document.getElementById('label-daily-total');
+            const tripTotalElement = document.getElementById('trip-total-amount');
+            const tripTotalLabel = document.getElementById('label-trip-total');
+
+            const lang = currentLang;
+            const navText = i18n[lang].nav_button;
+            const costText = i18n[lang].cost_button;
+            const costDisplayPrefix = i18n[lang].cost_display_prefix;
+
+            
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            document.getElementById('daily-itinerary-detail').classList.remove('hidden');
+
+            const locationText = lang === 'zh' ? day.location : day.location_ja;
+            const themeText = lang === 'zh' ? day.theme : day.theme_ja;
+
+            titleElement.textContent = `${i18n[lang].btn_day_prefix} ${day.day} ${i18n[lang].btn_day_suffix}：${locationText}`;
+            contentElement.innerHTML = `
+                <div class="text-base font-semibold text-indigo-700 mb-3 p-3 rounded-xl bg-indigo-100 border border-indigo-200 shadow-sm">
+                    ${i18n[lang].itinerary_theme_prefix}${themeText}
+                </div>
+                <div class="space-y-3">
+                    ${day.details.map((item, index) => {
+                        
+                        const detail = item[lang];
+                        const match = detail.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}/u);
+                        const icon = match ? match[0] : '📍'; 
+                        
+                        let textContent = detail.replace(icon, '').trim(); 
+                        
+                        let displayContent = textContent;
+                        if (displayContent.includes('(住宿地址:')) {
+                            displayContent = displayContent.substring(0, displayContent.indexOf('(住宿地址:')).trim();
+                        }
+                        
+                        const locationName = extractLocationName(textContent);
+                        const cityContext = day.day <= 4 ? (lang === 'zh' ? "京都 日本" : "京都 日本") : (lang === 'zh' ? "大阪 日本" : "大阪 日本");
+                        const mapQuery = encodeURIComponent(locationName + ", " + cityContext); 
+                        const mapUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+                        
+                        const showNav = requiresNavigation(locationName, textContent);
+                        
+                        const isAccommodation = locationName.includes('民宿') || locationName.includes('飯店') || locationName.includes('ホテル');
+                        const borderColor = isAccommodation ? 'border-red-400' : 'border-gray-100';
+
+                        const costKey = `day_${dayIndex}_item_${index}`;
+                        const savedCost = costData[costKey];
+
+                        return `
+                            <div class="bg-white p-3 rounded-xl shadow-lg border ${borderColor} flex flex-col justify-start transition-shadow hover:shadow-xl">
+                                <!-- 行程文字 -->
+                                <span class="text-gray-700 text-sm font-medium leading-relaxed flex items-start mb-2">
+                                    <span class="text-xl mr-2 flex-shrink-0">${icon}</span> 
+                                    <span>${displayContent}</span>
+                                </span>
+                                
+                                <!-- 按鈕區域 (修正：花費在左，導航在右，整體靠右) -->
+                                <div class="flex flex-wrap items-center gap-2 mt-2 w-full justify-end">
+                                    <!-- 顯示花費金額 -->
+                                    ${savedCost ? `
+                                        <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-100 mr-auto">
+                                            ${costDisplayPrefix}${savedCost}
+                                        </span>
+                                    ` : ''}
+
+                                    <!-- 花費按鈕 (現在在左邊) -->
+                                    <button onclick="openCostModal(${dayIndex}, ${index})" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        ${costText}
+                                    </button>
+
+                                    <!-- 導航按鈕 (現在在右邊) -->
+                                    ${showNav ? `
+                                    <a href="${mapUrl}" target="_blank" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        ${navText}
+                                    </a>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            // 更新今日總花費
+            const dailyTotal = calculateDailyTotal(dayIndex);
+            dailyTotalLabel.textContent = i18n[lang].total_cost_label;
+            dailyTotalElement.textContent = dailyTotal.toLocaleString();
+
+            // 更新整趟旅程總花費
+            const tripTotal = calculateTripTotal();
+            tripTotalLabel.textContent = i18n[lang].trip_total_label;
+            tripTotalElement.textContent = tripTotal.toLocaleString();
+
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeDayBtn = document.querySelector(`.day-btn[data-day="${dayIndex}"]`);
+            if (activeDayBtn) {
+                activeDayBtn.classList.add('active');
+            }
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-600');
+            });
+        }
+
+        // 8. 顯示靜態分頁 (天氣、注意事項、清單)
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-600');
+            });
+            const activeTabBtn = document.querySelector(`.tab-btn[data-section="${sectionId}"]`);
+            if (activeTabBtn) {
+                activeTabBtn.classList.add('active');
+                activeTabBtn.classList.remove('text-gray-600');
+            }
+        }
+        
+        // 9. 初始渲染注意事項與清單 
+        function renderStaticSections(lang) {
+            const currentNotes = notesData[lang];
+            document.getElementById('notes-list').innerHTML = currentNotes.map(note => `
+                <li class="p-2 bg-yellow-50 rounded-lg shadow-sm">${note}</li>
+            `).join('');
+
+            const currentBring = bringListData[lang];
+            document.getElementById('bring-list').innerHTML = currentBring.map(item => `
+                <li class="p-1.5 bg-green-50 rounded-lg shadow-sm">${item}</li>
+            `).join('');
+
+            const currentBuy = buyListData[lang];
+            document.getElementById('buy-list').innerHTML = currentBuy.map(item => `
+                <li class="p-1.5 bg-pink-50 rounded-lg shadow-sm">${item}</li>
+            `).join('');
+        }
+        
+        // 10. 抓取即時天氣資訊
+        async function fetchWeather() {
+            const outputDiv = document.getElementById('weather-output');
+            const loadingDiv = document.getElementById('weather-loading');
+            const lang = currentLang;
+            
+            if (document.getElementById('weather').classList.contains('hidden')) return;
+
+            const isDataLoaded = outputDiv.innerHTML.includes(i18n.zh.weather_latest_info) || outputDiv.innerHTML.includes(i18n.ja.weather_latest_info);
+
+            if (isDataLoaded) {
+                return;
+            }
+
+            loadingDiv.classList.remove('hidden');
+            outputDiv.innerHTML = '';
+            document.getElementById('loading-text').textContent = i18n[lang].loading_text;
+            
+            const maxRetries = 5;
+            let currentRetry = 0;
+
+            while (currentRetry < maxRetries) {
+                try {
+                    const systemPrompt = "Act as a weather analyst. Provide a brief summary of the current day's and next day's forecast, including temperature range, chance of precipitation, and general conditions (sunny, cloudy, etc.) for Kyoto, Japan and Osaka, Japan. Format the response clearly using bullet points.";
+                    const userQuery = "real time weather forecast for Kyoto and Osaka, Japan";
+
+                    const payload = {
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        tools: [{ "google_search": {} }],
+                        systemInstruction: {
+                            parts: [{ text: systemPrompt }]
+                        },
+                    };
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        const text = candidate.content.parts[0].text;
+                        
+                        const htmlText = text
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/^- /gm, '<li class="ml-4 list-disc">')
+                            .replace(/\n\n/g, '<br><br>');
+
+                        outputDiv.innerHTML = `<div class="text-lg font-bold text-center text-indigo-600 mb-3">${i18n[lang].weather_latest_info}</div><ul class="space-y-2">${htmlText}</ul>`;
+
+                        let sourcesHtml = '';
+                        const groundingMetadata = candidate.groundingMetadata;
+                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                            const sources = groundingMetadata.groundingAttributions
+                                .map(attribution => ({
+                                    uri: attribution.web?.uri,
+                                    title: attribution.web?.title,
+                                }))
+                                .filter(source => source.uri && source.title);
+
+                            if (sources.length > 0) {
+                                sourcesHtml = `
+                                    <div class="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                                        <p>${i18n[lang].section_weather_source}:</p>
+                                        ${sources.slice(0, 3).map(s => `<a href="${s.uri}" target="_blank" class="block truncate hover:text-indigo-500">${s.title}</a>`).join('')}
+                                    </div>
+                                `;
+                            }
+                        }
+                        
+                        outputDiv.innerHTML += sourcesHtml;
+                        loadingDiv.classList.add('hidden');
+                        return; 
+                    } else {
+                        throw new Error("API response format error or no content.");
+                    }
+                } catch (error) {
+                    console.error(`Weather API call failed (Retry ${currentRetry + 1}):`, error);
+                    currentRetry++;
+                    if (currentRetry < maxRetries) {
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, currentRetry) * 1000));
+                    }
+                }
+            }
+            
+            loadingDiv.classList.add('hidden');
+            outputDiv.innerHTML = `
+                <div class="text-red-600 font-semibold text-center p-4">
+                    ${i18n[lang].error_text}
+                </div>
+            `;
+        }
+
+
+        // --- 初始化 (Initialization) ---
+        window.onload = function() {
+            renderDayButtons(); 
+            updateStaticTexts(currentLang); // 渲染所有靜態文字和清單
+            showDay(1); // 預設顯示第一天行程
+        };
+    </script>
+</body>
+</html>
