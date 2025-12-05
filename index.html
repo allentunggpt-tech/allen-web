@@ -54,6 +54,11 @@
             background: linear-gradient(to right, #e0e7ff, #c7d2fe);
             border-top: 1px solid #a5b4fc;
         }
+        /* 自定義花費列表總計樣式 */
+        .custom-expense-total-bar {
+            background: linear-gradient(to right, #d1fae5, #a7f3d0);
+            border-top: 2px solid #34d399;
+        }
         /* Modal 動畫 */
         .modal-enter {
             opacity: 0;
@@ -98,15 +103,23 @@
             </div>
             
             <!-- 2. Static Tabs (天氣、清單等) -->
-            <div class="flex justify-around p-2 text-xs bg-gray-50 border-t">
-                <button id="tab-weather" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors" data-section="weather" onclick="showSection('weather'); fetchWeather()">
+            <div class="flex justify-around p-2 text-xs bg-gray-50 border-t overflow-x-auto">
+                <button id="tab-weather" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors whitespace-nowrap" data-section="weather" onclick="showSection('weather'); fetchWeather()">
                     ☀️ 即時天氣
                 </button>
-                <button id="tab-notes" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors" data-section="notes" onclick="showSection('notes')">
+                <button id="tab-notes" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors whitespace-nowrap" data-section="notes" onclick="showSection('notes')">
                     📝 注意事項
                 </button>
-                <button id="tab-checklist" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors" data-section="checklist" onclick="showSection('checklist')">
+                <!-- 新增常用翻譯按鈕 -->
+                <button id="tab-translations" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors whitespace-nowrap" data-section="translations" onclick="showSection('translations')">
+                    🗣️ 常用翻譯
+                </button>
+                <button id="tab-checklist" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors whitespace-nowrap" data-section="checklist" onclick="showSection('checklist')">
                     🎒 必買清單
+                </button>
+                <!-- 消費金額按鈕 -->
+                <button id="tab-expenses" class="tab-btn px-3 py-2 rounded-full font-medium text-gray-600 transition-colors whitespace-nowrap" data-section="expenses" onclick="showSection('expenses')">
+                    💰 消費金額
                 </button>
             </div>
         </div>
@@ -121,14 +134,14 @@
                     <!-- Day content will be loaded here, styled as individual cards -->
                 </div>
                 
-                <!-- 花費總計區塊 (固定在行程列表下方) -->
+                <!-- 消費總計區塊 (固定在行程列表下方) -->
                 <div id="cost-summary-container" class="mt-6 rounded-xl shadow-md overflow-hidden">
-                    <!-- 今日花費 -->
+                    <!-- 今日消費 -->
                     <div class="p-4 daily-cost-bar flex justify-between items-center text-yellow-900">
-                        <span class="font-bold text-lg" id="label-daily-total">💰 今日花費總金額：</span>
+                        <span class="font-bold text-lg" id="label-daily-total">💰 今日消費總金額：</span>
                         <span id="daily-total-amount" class="font-extrabold text-2xl">0</span>
                     </div>
-                    <!-- 整趟旅程花費 -->
+                    <!-- 整趟旅程消費 -->
                     <div class="p-4 trip-cost-bar flex justify-between items-center text-indigo-900">
                         <span class="font-bold text-lg" id="label-trip-total">💎 整趟旅程總金額：</span>
                         <span id="trip-total-amount" class="font-extrabold text-2xl text-indigo-700">0</span>
@@ -139,16 +152,21 @@
             <!-- 2. 即時天氣 (Weather) -->
             <div id="weather" class="section hidden">
                 <h2 id="weather-section-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">京都・大阪 天氣預報</h2>
-                <div class="bg-blue-50 p-4 rounded-xl shadow-md">
+                <div class="bg-blue-50 p-4 rounded-xl shadow-md min-h-[150px]">
                     <p id="weather-source" class="text-sm text-blue-700 mb-3">資料來源：網路即時查詢 (使用 Google Search Grounding)</p>
-                    <div id="weather-output" class="text-gray-700 leading-relaxed min-h-24 flex items-center justify-center">
-                        <div id="weather-loading" class="text-center">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span id="loading-text">正在查詢天氣資訊...</span>
-                        </div>
+                    
+                    <!-- Loading Block -->
+                    <div id="weather-loading" class="hidden flex flex-col items-center justify-center py-10">
+                        <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-indigo-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="loading-text" class="text-gray-600">正在查詢天氣資訊...</span>
+                    </div>
+
+                    <!-- Result Block -->
+                    <div id="weather-output" class="text-gray-700 leading-relaxed">
+                        <!-- 天氣資訊將顯示於此 -->
                     </div>
                 </div>
             </div>
@@ -161,9 +179,32 @@
                 </ul>
             </div>
 
-            <!-- 4. 必買必帶清單 (Checklist) -->
+            <!-- 4. 常用翻譯 (Translations) -->
+            <div id="translations" class="section hidden">
+                <h2 id="translations-section-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">常用翻譯</h2>
+                <div id="translations-list" class="space-y-4">
+                    <!-- Translation categories will be rendered here -->
+                </div>
+            </div>
+
+            <!-- 5. 必買必帶清單 (Checklist) -->
             <div id="checklist" class="section hidden">
                 <h2 id="checklist-section-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">必買必帶清單</h2>
+                
+                <!-- 新增：可自行手動輸入的必買清單 (位於上方) -->
+                <div class="bg-purple-50 p-3 rounded-xl shadow-sm border border-purple-200 mb-6 mt-2">
+                    <h3 id="checklist-custom-title" class="font-semibold text-lg mb-2 text-purple-700">【我的自訂清單】</h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="checklist-input" class="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none" placeholder="輸入物品名稱...">
+                        <button id="btn-add-checklist" onclick="addChecklistItem()" class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-md transition-colors whitespace-nowrap">
+                            新增
+                        </button>
+                    </div>
+                    <ul id="custom-checklist-list" class="list-none space-y-2">
+                        <!-- 動態產生的清單項目 -->
+                    </ul>
+                </div>
+
                 <h3 id="checklist-bring-title" class="font-semibold text-lg mt-4 mb-2 text-green-700">【必帶物品】</h3>
                 <ul class="list-disc list-inside space-y-2 text-gray-700" id="bring-list">
                     <!-- Bring List will be rendered here -->
@@ -174,19 +215,169 @@
                 </ul>
             </div>
 
+            <!-- 6. 消費金額 (Expenses) -->
+            <div id="expenses" class="section hidden">
+                <h2 id="expenses-section-title" class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">新增消費</h2>
+                
+                <!-- 輸入區塊 -->
+                <div class="bg-gray-50 p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <!-- 類別下拉選單 -->
+                        <div class="col-span-3">
+                            <select id="expense-category" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="transport">交通</option>
+                                <option value="food">餐飲</option>
+                                <option value="shopping">購物</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <!-- 明細輸入 -->
+                        <div class="col-span-4">
+                            <input type="text" id="expense-detail" maxlength="10" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="明細(10字)">
+                        </div>
+                        <!-- 金額輸入 -->
+                        <div class="col-span-3">
+                            <input type="number" id="expense-amount" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="金額">
+                        </div>
+                        <!-- 確定按鈕 -->
+                        <div class="col-span-2">
+                            <button id="btn-add-expense" onclick="addCustomExpense()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 px-1 rounded-lg shadow-md transition-colors flex justify-center items-center">
+                                確定
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 列表區塊 1: 額外消費 -->
+                <h3 id="custom-expense-list-title" class="text-md font-semibold text-gray-700 mb-2 border-l-4 border-indigo-500 pl-2">額外消費列表</h3>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                    <div class="bg-indigo-50 p-2 grid grid-cols-12 gap-2 text-xs font-bold text-gray-600 border-b border-indigo-100">
+                        <div class="col-span-2 text-center header-category">類別</div>
+                        <div class="col-span-5 header-detail">明細</div>
+                        <div class="col-span-3 text-right header-amount">金額</div>
+                        <div class="col-span-2 text-center">操作</div>
+                    </div>
+                    <div id="expense-list-container" class="divide-y divide-gray-100">
+                        <!-- 動態產生的額外消費列表 -->
+                        <div id="empty-expense-msg" class="p-4 text-center text-gray-400 text-sm">
+                            尚無額外消費紀錄
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 列表區塊 2: 行程消費總覽 -->
+                <h3 id="itinerary-expense-list-title" class="text-md font-semibold text-gray-700 mb-2 border-l-4 border-green-500 pl-2">行程消費總覽</h3>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
+                    <div class="bg-green-50 p-2 grid grid-cols-12 gap-2 text-xs font-bold text-gray-600 border-b border-green-100">
+                        <div class="col-span-2 text-center header-category">類別</div>
+                        <div class="col-span-5 header-detail">明細</div>
+                        <div class="col-span-3 text-right header-amount">金額</div>
+                        <div class="col-span-2 text-center">操作</div>
+                    </div>
+                    <div id="itinerary-expense-list-container" class="divide-y divide-gray-100">
+                        <!-- 動態產生的行程消費列表 -->
+                    </div>
+                </div>
+
+                <!-- 總金額區塊 -->
+                <div class="mt-4 p-4 rounded-xl custom-expense-total-bar shadow-md flex justify-between items-center text-emerald-900 sticky bottom-16">
+                    <span class="font-bold text-lg" id="label-custom-total">整趟旅程消費總金額：</span>
+                    <span id="custom-total-amount" class="font-extrabold text-2xl">0</span>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- 自定義輸入金額 Modal -->
+    <!-- 自定義輸入金額 Modal (行程 & 額外編輯通用) -->
     <div id="cost-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center transition-opacity duration-300">
         <div class="bg-white rounded-lg shadow-2xl p-6 w-80 transform transition-all scale-100 modal-enter-active">
-            <h3 class="text-lg font-bold text-gray-800 mb-4" id="modal-title">輸入花費金額</h3>
-            <p class="text-sm text-gray-500 mb-2">請輸入數字，若要刪除請留空。</p>
-            <input type="number" id="cost-input" class="w-full p-3 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-lg" placeholder="例如: 1000" inputmode="numeric">
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">取消</button>
-                <button onclick="confirmCost()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-bold shadow-md">確定</button>
+            <h3 class="text-lg font-bold text-gray-800 mb-4" id="modal-title">新增消費</h3>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1" id="label-category">類別</label>
+                    <select id="modal-expense-category" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="transport">交通</option>
+                        <option value="food">餐飲</option>
+                        <option value="shopping">購物</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1" id="label-detail">明細 (10字)</label>
+                    <input type="text" id="modal-expense-detail" maxlength="10" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1" id="label-amount">金額</label>
+                    <input type="number" id="modal-expense-amount" class="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" inputmode="numeric">
+                </div>
             </div>
+
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm">取消</button>
+                <button onclick="confirmModalCost()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-bold shadow-md text-sm">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 翻譯彈窗 Modal -->
+    <div id="translation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-sm transform transition-all scale-100 modal-enter-active text-center">
+            <h3 class="text-xl font-bold text-gray-800 mb-2 border-b pb-2" id="trans-modal-source">中文</h3>
+            <div class="py-6">
+                <p class="text-3xl font-black text-indigo-600 leading-snug" id="trans-modal-target">日本語</p>
+                <p class="text-sm text-gray-500 mt-2 italic" id="trans-modal-romaji">Romaji</p>
+            </div>
+            <button onclick="closeTranslationModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-lg font-bold shadow-md transition-colors">
+                關閉 / 閉じる
+            </button>
+        </div>
+    </div>
+
+    <!-- 巴士時刻表 Modal (新增) -->
+    <div id="bus-timetable-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-sm transform transition-all scale-100 modal-enter-active">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-lg font-bold text-indigo-700">🚌 巴士時刻表 (參考)</h3>
+                <button onclick="closeBusModal()" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div class="text-sm text-gray-600 mb-3">
+                <p class="font-bold">路線：202 / 207 號 (往祇園/清水寺)</p>
+                <p>上車：東福寺 (Tofukuji) / 下車：五條坂</p>
+            </div>
+            <div class="overflow-y-auto max-h-60">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="p-2">時</th>
+                            <th class="p-2">預估發車 (平日/土休)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr>
+                            <td class="p-2 font-bold">06</td>
+                            <td class="p-2">
+                                <span class="bg-green-100 text-green-800 px-1 rounded">05</span>, 
+                                <span class="bg-green-100 text-green-800 px-1 rounded">18</span>, 
+                                31, 46, 49
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-bold">07</td>
+                            <td class="p-2">02, 11, 21, 28, 35, 43, 52</td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-bold">08</td>
+                            <td class="p-2">02, 12, 21, 29, 37, 47, 57</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-red-500 mt-2">* 207號首班約06:05，202號約06:18。建議提早候車。</p>
+            </div>
+            <button onclick="closeBusModal()" class="w-full mt-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                關閉
+            </button>
         </div>
     </div>
 
@@ -198,11 +389,40 @@
         // 全域語言狀態
         let currentLang = 'zh';
 
-        // 花費數據存儲 (格式: { 'day_1_item_0': 1500, 'day_2_item_3': 500 })
-        let costData = {};
-        
-        // 暫存編輯中的項目索引
-        let currentEditContext = { dayIndex: null, itemIndex: null };
+        // 行程消費列表
+        let itineraryExpenses = [];
+        // 額外消費列表
+        let customExpenses = [];
+        // 自定義必買清單
+        let myChecklist = [];
+
+        // 暫存編輯中的項目 Context
+        let currentEditContext = { 
+            type: null, // 'itinerary_add', 'itinerary_edit', 'custom_add', 'custom_edit'
+            id: null,
+            dayIndex: null, 
+            itemIndex: null 
+        };
+
+        // 常用語句數據
+        const commonPhrases = [
+            { category: 'greeting', zh: '你好', ja: 'こんにちは', romaji: 'Konnichiwa' },
+            { category: 'greeting', zh: '謝謝', ja: 'ありがとうございます', romaji: 'Arigatou gozaimasu' },
+            { category: 'greeting', zh: '不好意思 / 請問', ja: 'すみません', romaji: 'Sumimasen' },
+            { category: 'greeting', zh: '是 / 好的', ja: 'はい', romaji: 'Hai' },
+            { category: 'greeting', zh: '不是 / 不對', ja: 'いいえ', romaji: 'Iie' },
+            { category: 'dining', zh: '請給我菜單', ja: 'メニューをください', romaji: 'Menyu o kudasai' },
+            { category: 'dining', zh: '請給我水', ja: 'お水をください', romaji: 'Omizu o kudasai' },
+            { category: 'dining', zh: '這個很好吃', ja: 'これは美味しいです', romaji: 'Kore wa oishii desu' },
+            { category: 'dining', zh: '請結帳', ja: 'お会計をお願いします', romaji: 'Okaikei o onegaishimasu' },
+            { category: 'shopping', zh: '這個多少錢？', ja: 'これはいくらですか？', romaji: 'Kore wa ikura desu ka?' },
+            { category: 'shopping', zh: '我要買這個', ja: 'これをください', romaji: 'Kore o kudasai' },
+            { category: 'shopping', zh: '可以刷卡嗎？', ja: 'カードは使えますか？', romaji: 'Kaado wa tsukaemasu ka?' },
+            { category: 'transport', zh: '車站在哪裡？', ja: '駅はどこですか？', romaji: 'Eki wa doko desu ka?' },
+            { category: 'transport', zh: '這班車到...嗎？', ja: 'この電車は...に行きますか？', romaji: 'Kono densha wa ... ni ikimasu ka?' },
+            { category: 'lodging', zh: '我要辦理入住', ja: 'チェックインをお願いします', romaji: 'Chekkuin o onegaishimasu' },
+            { category: 'lodging', zh: '有Wi-Fi嗎？', ja: 'Wi-Fiはありますか？', romaji: 'Wi-Fi wa arimasu ka?' }
+        ];
 
         // 國際化 (i18n) 靜態文字數據
         const i18n = {
@@ -213,26 +433,55 @@
                 btn_day_suffix: '天',
                 tab_weather: '☀️ 即時天氣',
                 tab_notes: '📝 注意事項',
+                tab_translations: '🗣️ 常用翻譯',
                 tab_checklist: '🎒 必買清單',
+                tab_expenses: '💰 消費金額',
                 section_weather_title: '京都・大阪 天氣預報',
                 section_weather_source: '資料來源：網路即時查詢 (使用 Google Search Grounding)',
                 section_notes_title: '重要注意事項',
+                section_translations_title: '常用翻譯 (點擊翻譯按鈕展示)',
                 section_checklist_title: '必買必帶清單',
+                section_expenses_title: '新增消費',
                 checklist_bring_title: '【必帶物品】',
                 checklist_buy_title: '【必買紀念品/美食】',
                 itinerary_theme_prefix: '主題：',
                 nav_button: '導航',
-                cost_button: '花費',
-                cost_display_prefix: '花費金額：',
-                total_cost_label: '💰 今日花費總金額：',
+                cost_button: '消費',
+                cost_display_prefix: '已消費：',
+                total_cost_label: '💰 今日消費總金額：',
                 trip_total_label: '💎 整趟旅程總金額：',
-                modal_title: '輸入花費金額',
-                modal_desc: '請輸入數字，若要刪除請留空。',
+                modal_title_add: '新增消費',
+                modal_title_edit: '編輯消費',
                 modal_cancel: '取消',
                 modal_confirm: '確定',
+                modal_delete: '刪除',
                 loading_text: '正在查詢天氣資訊...',
                 error_text: '天氣資訊查詢失敗。請稍後再試或檢查網路連線。',
-                weather_latest_info: '【最新天氣資訊】'
+                weather_latest_info: '【最新天氣資訊】',
+                cat_transport: '交通',
+                cat_food: '餐飲',
+                cat_shopping: '購物',
+                cat_other: '其他',
+                ph_detail: '明細(10字)',
+                ph_amount: '金額',
+                btn_confirm: '確定',
+                header_category: '類別',
+                header_detail: '明細',
+                header_amount: '金額',
+                msg_no_expense: '尚無額外消費紀錄',
+                msg_no_itinerary_expense: '尚無行程消費紀錄',
+                label_custom_total: '整趟旅程消費總金額：',
+                custom_list_title: '額外消費列表',
+                itinerary_list_title: '行程消費總覽',
+                label_category: '類別',
+                label_detail: '明細 (10字)',
+                label_amount: '金額',
+                confirm_del: '確定刪除此筆消費？',
+                checklist_custom_title: '【我的自訂清單】',
+                checklist_input_placeholder: '輸入物品名稱...',
+                btn_add: '新增',
+                btn_trans: '文 A/あ',
+                btn_timetable: '時刻表'
             },
             ja: {
                 app_title: '⛩️ 京阪9日の旅 🏯',
@@ -241,26 +490,55 @@
                 btn_day_suffix: '日',
                 tab_weather: '☀️ リアルタイム天気',
                 tab_notes: '📝 注意事項',
+                tab_translations: '🗣️ 翻訳',
                 tab_checklist: '🎒 持ち物・買い物リスト',
+                tab_expenses: '💰 消費金額',
                 section_weather_title: '京都・大阪 天気予報',
                 section_weather_source: '情報源：リアルタイムインターネット検索',
                 section_notes_title: '重要な注意事項',
+                section_translations_title: 'よく使うフレーズ (翻訳ボタンを押して表示)',
                 section_checklist_title: '持ち物・買い物リスト',
+                section_expenses_title: '消費を追加',
                 checklist_bring_title: '【持っていくもの】',
                 checklist_buy_title: '【お土産・グルメ】',
                 itinerary_theme_prefix: 'テーマ：',
                 nav_button: 'ナビ',
-                cost_button: '費用',
-                cost_display_prefix: '費用：',
-                total_cost_label: '💰 本日の合計費用：',
-                trip_total_label: '💎 旅行の総費用：',
-                modal_title: '費用を入力',
-                modal_desc: '数字を入力してください。削除するには空のままにしてください。',
+                cost_button: '消費',
+                cost_display_prefix: '済：',
+                total_cost_label: '💰 本日の合計消費：',
+                trip_total_label: '💎 旅行の総消費：',
+                modal_title_add: '消費を追加',
+                modal_title_edit: '消費を編集',
                 modal_cancel: 'キャンセル',
                 modal_confirm: '確定',
+                modal_delete: '削除',
                 loading_text: '天気情報を検索中...',
                 error_text: '天気情報の取得に失敗しました。後でもう一度お試しください。',
-                weather_latest_info: '【最新の天気情報】'
+                weather_latest_info: '【最新の天気情報】',
+                cat_transport: '交通',
+                cat_food: '飲食',
+                cat_shopping: '買い物',
+                cat_other: 'その他',
+                ph_detail: '詳細(10字)',
+                ph_amount: '金額',
+                btn_confirm: '確定',
+                header_category: '種別',
+                header_detail: '詳細',
+                header_amount: '金額',
+                msg_no_expense: '追加の消費記録なし',
+                msg_no_itinerary_expense: '旅程の消費記録なし',
+                label_custom_total: '旅行の総消費金額：',
+                custom_list_title: '追加消費リスト',
+                itinerary_list_title: '旅程消費概要',
+                label_category: '種別',
+                label_detail: '詳細 (10文字)',
+                label_amount: '金額',
+                confirm_del: 'この項目を削除しますか？',
+                checklist_custom_title: '【マイリスト】',
+                checklist_input_placeholder: 'アイテムを入力...',
+                btn_add: '追加',
+                btn_trans: '翻訳',
+                btn_timetable: '時刻表'
             }
         };
 
@@ -269,73 +547,112 @@
         const itineraryData = [
             null, 
             { day: 1, location: "京都：抵達與安頓", theme: "歡迎來到古都！交通與入住", location_ja: "京都：到着と宿泊", theme_ja: "古都へようこそ！交通とチェックイン", details: [
-                {zh: "🛫 關西機場抵達", ja: "🛫 関西国際空港に到着"}, 
-                {zh: "🚅 搭乘 HARUKA 前往京都車站", ja: "🚅 HARUKAで京都駅へ移動"},
-                {zh: "🚆 搭乘京都奈良線到東福寺站", ja: "🚆 京都奈良線で東福寺駅へ"}, 
-                {zh: "🏠 Oyado tofukuji民宿 (住宿地址: 7-29 Fukuine Goshonouchicho, Higashiyama Ward, Kyoto, 605-0987日本)", ja: "🏠 お宿 東福寺 (宿泊先)"},
-                {zh: "🛍️ 閒逛：東福寺周邊適應環境", ja: "🛍️ 散策：東福寺周辺で環境に慣れる"},
-                {zh: "🍽️ 晚餐：京都車站周邊", ja: "🍽️ 夕食：京都駅周辺"}
+                {zh: "關西機場抵達", ja: "關西国際空港に到着"}, 
+                {zh: "搭乘 HARUKA 前往京都車站", ja: "HARUKAで京都駅へ移動"},
+                {zh: "搭乘京都奈良線到東福寺站", ja: "京都奈良線で東福寺駅へ"}, 
+                {zh: "Oyado tofukuji民宿 (住宿地址: 7-29 Fukuine Goshonouchicho, Higashiyama Ward, Kyoto, 605-0987日本)", ja: "お宿 東福寺 (宿泊先)"},
+                {zh: "閒逛：東福寺周邊適應環境", ja: "散策：東福寺周辺で環境に慣れる"},
+                {zh: "晚餐：京都車站周邊", ja: "夕食：京都駅周辺"}
             ] },
-            { day: 2, location: "京都：經典東山", theme: "清水寺與二年坂、三年坂散策", location_ja: "京都：定番の東山", theme_ja: "清水寺と二年坂・三年坂を散策", details: [
-                {zh: "🏯 上午：清水寺 (必拍景點)", ja: "🏯 午前：清水寺（撮影スポット）"}, 
-                {zh: "🛍️ 上午：二年坂、三年坂 (購買紀念品)", ja: "🛍️ 午前：二年坂・三年坂（お土産購入）"}, 
-                {zh: "🥢 午餐：東山周邊特色料理", ja: "🥢 昼食：東山周辺の郷土料理"}, 
-                {zh: "⛩️ 下午：高台寺或八坂神社參拜", ja: "⛩️ 午後：高台寺または八坂神社を参拝"}, 
-                {zh: "🚶 傍晚：沿著鴨川散步回飯店", ja: "🚶 夕方：鴨川沿いを散歩してホテルへ"}
+            { day: 2, location: "京都：清水寺早鳥", theme: "清水寺晨間散策與河原町購物", location_ja: "京都：清水寺早朝", theme_ja: "清水寺早朝散策と河原町ショッピング", details: [
+                {zh: "早起：前往 '東福寺' 公車站 (Tofukuji Bus Stop)", ja: "早起き：'東福寺' バス停へ"},
+                {zh: "搭乘：市營巴士 202 或 207 號 (往祇園/清水寺方向)", ja: "乗車：市バス 202 または 207 系統 (祇園・清水寺方面)"},
+                {zh: "下車：五條坂站下車，步行上山 (約10分鐘)", ja: "下車：五条坂バス停で下車、徒歩で登る (約10分)"},
+                {zh: "景點：清水寺 (早晨人少，適合拍照)", ja: "観光：清水寺 (早朝は人が少なく撮影に最適)"},
+                {zh: "散步：三年坂 -> 二年坂 -> 八坂神社 (慢慢步行)", ja: "散策：三年坂 -> 二年坂 -> 八坂神社 (ゆっくり歩く)"},
+                {zh: "午餐：しゃぶしゃぶ・すき焼き 食べ放題 但馬屋 (Tajimaya) 四條河原町店 (和牛壽喜燒吃到飽/高CP值)", ja: "昼食：しゃぶしゃぶ・すき焼き 食べ放題 但馬屋 (Tajimaya) 四条河原町店"},
+                {zh: "動漫巡禮 1：Surugaya (駿河屋) 京都寺町店 (二手動漫周邊)", ja: "アニメ巡り 1：駿河屋 京都寺町店 (中古アニメグッズ)"},
+                {zh: "動漫巡禮 2：Lashinbang (羅針盤) 京都店 (動漫周邊挖寶)", ja: "アニメ巡り 2：らしんばん 京都店 (アニメグッズ掘り出し物)"},
+                {zh: "動漫巡禮 3：Animate (安利美特) 京都店 (最新動漫商品)", ja: "アニメ巡り 3：アニメイト 京都店 (最新アニメグッズ)"},
+                {zh: "晚餐：餃子的王將、天下一品拉麵或當地站立式居酒屋 (便宜小吃)", ja: "夕食：餃子の王将、天下一品ラーメン、または立ち飲み居酒屋"},
+                {zh: "回程：步行回民宿", ja: "帰路：徒歩で宿へ戻る"}
             ] },
-            { day: 3, location: "京都：竹林與金閣", theme: "自然風光與歷史建築", location_ja: "京都：竹林と金閣", theme_ja: "自然の風景と歴史的建築", details: [
-                {zh: "🎋 上午：嵐山竹林之道 (清晨前往避開人潮)", ja: "🎋 午前：嵐山竹林の道（早朝がおすすめ）"}, 
-                {zh: "🕌 上午：天龍寺 (世界遺產)", ja: "🕌 午前：天龍寺（世界遺産）"}, 
-                {zh: "🍲 午餐：嵐山周邊湯豆腐料理", ja: "🍲 昼食：嵐山周辺の湯豆腐料理"}, 
-                {zh: "✨ 下午：金閣寺 (鹿苑寺) 欣賞金色倒影", ja: "✨ 午後：金閣寺（鹿苑寺）で金色の映り込みを鑑賞"}, 
-                {zh: "⛩️ 傍晚：北野天滿宮 (如時間允許)", ja: "⛩️ 夕方：北野天満宮（時間があれば）"}
+            { day: 3, location: "京都：伏見稻荷與宇治", theme: "千本鳥居、和服與抹茶之鄉", location_ja: "京都：伏見稲荷と宇治", theme_ja: "千本鳥居、着物、抹茶の里", details: [
+                {zh: "搭乘JR奈良線 (東福寺 -> 稻荷站) (約5分鐘) (註：1日券不可用，需額外付費)", ja: "JR奈良線に乗車 (東福寺 -> 稲荷駅) (約5分) (注：1日券不可、別途支払い)"},
+                {zh: "預約：08:30 ookini-kimono 伏見稻荷店 (和服體驗)", ja: "予約：08:30 ookini-kimono 伏見稲荷店 (着物体験)"},
+                {zh: "景點：伏見稻荷大社參拜與千本鳥居拍照", ja: "観光：伏見稲荷大社 (千本鳥居で撮影)"},
+                {zh: "歸還：歸還和服", ja: "返却：着物を返却"},
+                {zh: "交通：JR奈良線 (稻荷站 -> 宇治站) (註：1日券不可用，需額外付費)", ja: "交通：JR奈良線 (稲荷駅 -> 宇治駅) (注：1日券不可、別途支払い)"},
+                {zh: "午餐：宇治平等院表參道 (抹茶料理/中村藤吉)", ja: "昼食：宇治平等院表参道 (抹茶料理/中村藤吉)"},
+                {zh: "景點：宇治橋 -> 宇治神社 -> 宇治上神社 (世界遺產)", ja: "観光：宇治橋 -> 宇治神社 -> 宇治上神社 (世界遺産)"},
+                {zh: "點心：品嘗宇治抹茶冰淇淋", ja: "おやつ：宇治抹茶ソフトクリーム"},
+                {zh: "交通：步行至 JR 宇治站 -> 搭乘 JR 奈良線至京都車站", ja: "交通：徒歩でJR宇治駅へ -> JR奈良線で京都駅へ"},
+                {zh: "晚餐：京都車站周邊高CP值推薦 (如：Kyoto Ramen Koji (拉麵小路) / Katsukura (名代豬排))", ja: "夕食：京都駅周辺の高CP値レストラン (例：京都拉麺小路 / かつくら)"},
+                {zh: "購物：唐吉軻德 (Don Quijote) 京都車站八條口店 (Kyoto Avanti)", ja: "買い物：ドン・キホーテ 京都アバンティ店"},
+                {zh: "回程：搭車回民宿", ja: "帰路：宿へ戻る"}
             ] },
-            { day: 4, location: "京都/奈良：千本鳥居與鹿", theme: "壯觀神社與可愛動物", location_ja: "京都/奈良：千本鳥居と鹿", theme_ja: "壮大な神社と可愛い動物たち", details: [
-                {zh: "⛩️ 上午：伏見稻荷大社 (挑戰千本鳥居)", ja: "⛩️ 午前：伏見稲荷大社（千本鳥居を体験）"}, 
-                {zh: "🍢 午餐：伏見稻荷周邊小吃", ja: "🍢 昼食：伏見稲荷周辺の軽食"}, 
-                {zh: "🦌 下午：搭乘 JR 前往奈良", ja: "🦌 午後：JRで奈良へ移動"}, 
-                {zh: "🐘 奈良：東大寺 (大佛殿) 與奈良公園餵鹿", ja: "🐘 奈良：東大寺（大仏殿）と奈良公園で鹿と触れ合う"}, 
-                {zh: "🍽️ 晚餐：奈良特色料理後返回京都", ja: "🍽️ 夕食：奈良の郷土料理を堪能後、京都へ戻る"}
+            { day: 4, location: "奈良：公園與東大寺", theme: "奈良公園小鹿與大佛", location_ja: "奈良：公園と東大寺", theme_ja: "奈良公園の鹿と大仏", details: [
+                {zh: "退房：Check-out，前往奈良", ja: "チェックアウト：奈良へ移動"},
+                {zh: "交通：JR奈良線 (東福寺 -> 奈良) (約45分) (註：1日券不可用)", ja: "交通：JR奈良線 (東福寺 -> 奈良) (約45分) (注：1日券不可)"},
+                {zh: "先到飯店APA Hotel 寄放行李", ja: "まずAPAホテルに荷物を預ける"},
+                {zh: "步行：前往奈良公園餵鹿", ja: "徒歩：奈良公園へ鹿に餌やり"},
+                {zh: "景點：東大寺 (大佛殿) 參觀", ja: "観光：東大寺 (大仏殿) 参拝"},
+                {zh: "午餐：志津香釜飯 (Shizuka) 公園店 (高CP值/排隊名店)", ja: "昼食：志津香釜めし (Shizuka) 公園店 (高CP値/行列店)"},
+                {zh: "步行：返回 APA Hotel 辦理 Check-in", ja: "徒歩：アパホテルに戻りチェックイン"},
+                {zh: "晚餐：Maguro Koya (鮪魚小屋) (高CP值鮪魚料理)", ja: "夕食：まぐろ小屋 (高CP値まぐろ料理)"},
+                {zh: "回程：回民宿 (APA Hotel Kintetsunara-Ekimae)", ja: "帰路：宿へ戻る (APAホテル近鉄奈良駅前)"}
             ] },
-            { day: 5, location: "大阪：轉換陣地與空中夜景", theme: "移動日與大阪都市魅力", location_ja: "大阪：移動と空中庭園", theme_ja: "移動日と大阪の都市の魅力", details: [
-                {zh: "🚄 上午：退房並搭乘 JR/新幹線前往大阪", ja: "🚄 午前：チェックアウトし、JR/新幹線で大阪へ移動"}, 
-                {zh: "🏨 大阪飯店 Check-in", ja: "🏨 大阪のホテルにチェックイン"}, 
-                {zh: "🍽️ 午餐：新大阪或梅田周邊", ja: "🍽️ 昼食：新大阪または梅田周辺"}, 
-                {zh: "🛍️ 下午：梅田周邊購物 (大丸、阪急百貨)", ja: "🛍️ 午後：梅田周辺でショッピング（大丸、阪急百貨店）"}, 
-                {zh: "🌃 傍晚：梅田藍天大廈 (空中庭園展望台) 欣賞夕陽與夜景", ja: "🌃 夕方：梅田スカイビル（空中庭園展望台）で夕日と夜景を鑑賞"}, 
-                {zh: "🍻 晚餐：梅田附近居酒屋", ja: "🍻 夕食：梅田近くの居酒屋"}
+            { day: 5, location: "大阪：難波購物與新世界", theme: "熱鬧難波與懷舊新世界", location_ja: "大阪：難波と新世界", theme_ja: "賑やかな難波とレトロな新世界", details: [
+                {zh: "退房：Check-out，搭車前往大阪", ja: "チェックアウト：大阪へ移動"},
+                {zh: "交通：近鐵/JR (奈良 -> 大阪難波) (約40分)", ja: "交通：近鉄/JR (奈良 -> 大阪難波) (約40分)"},
+                {zh: "寄放行李/購物：EDION Namba (愛電王 難波旗艦店)", ja: "荷物預け/買い物：エディオン なんば本店 (EDION Namba)"},
+                {zh: "午餐：Tokisushi (ときすし 本店) (難波高CP值壽司)", ja: "昼食：ときすし 本店 (難波の高CP値寿司)"},
+                {zh: "交通：搭乘大阪Metro御堂筋線 (難波站 -> 動物園前站) (僅2站)", ja: "交通：大阪メトロ御堂筋線 (難波駅 -> 動物園前駅) (2駅)"},
+                {zh: "彩之宿202 民宿 Check-in", ja: "彩の宿202 民宿チェックイン"},
+                {zh: "散步：步行前往新世界 (通天閣)", ja: "散策：徒歩で新世界 (通天閣) へ"},
+                {zh: "晚餐：Yaekatsu (八重勝) (新世界必吃串炸)", ja: "夕食：八重勝 (新世界名物 串カツ)"},
+                {zh: "回程：步行回民宿", ja: "帰路：徒歩で宿へ戻る"}
             ] },
-            { day: 6, location: "大阪：歷史與懷舊", theme: "大阪的歷史地標與復古街區", location_ja: "大阪：歴史とレトロな街並み", theme_ja: "大阪の歴史的ランドマークとレトロなエリア", details: [
-                {zh: "🏰 上午：大阪城公園與天守閣 (了解豐臣秀吉歷史)", ja: "🏰 午前：大阪城公園と天守閣（豊臣秀吉の歴史を学ぶ）"}, 
-                {zh: "🍽️ 午餐：大阪城周邊", ja: "🍽️ 昼食：大阪城周辺"}, 
-                {zh: "⛩️ 下午：大阪天滿宮 (祈求學業)", ja: "⛩️ 午後：大阪天満宮（学業成就を祈願）"}, 
-                {zh: "🗼 傍晚：新世界與通天閣 (感受舊大阪風情)", ja: "🗼 夕方：新世界と通天閣（古き良き大阪の雰囲気を体験）"}, 
-                {zh: "🍢 晚餐：嘗試串炸料理", ja: "🍢 夕食：串カツ料理を試す"}
+            { day: 6, location: "大阪：周遊卡精華(北)", theme: "大阪城與梅田空中庭園", location_ja: "大阪：周遊パス(北)", theme_ja: "大阪城と梅田スカイビル", details: [
+                {zh: "交通：使用大阪周遊卡 (Day 1) - 地鐵谷町線 (動物園前 -> 谷町四丁目)", ja: "交通：大阪周遊パス利用 (1日目) - 地下鉄谷町線 (動物園前 -> 谷町四丁目)"},
+                {zh: "上午：大阪城天守閣 (建議由大手門進入)", ja: "午前：大阪城天守閣 (大手門から入るのがおすすめ)"},
+                {zh: "體驗：大阪城御座船 (周遊卡免費，需先換票)", ja: "体験：大阪城御座船 (周遊パスで無料、要チケット引換)"},
+                {zh: "交通：地鐵谷町線 (谷町四丁目 -> 天神橋筋六丁目)", ja: "交通：地下鉄谷町線 (谷町四丁目 -> 天神橋筋六丁目)"},
+                {zh: "午餐：Harukoma (春駒) 壽司 (天神橋筋六丁目)", ja: "昼食：春駒 寿司 (天神橋筋六丁目)"},
+                {zh: "下午：大阪生活今昔館 (體驗江戶時代大阪)", ja: "午後：大阪くらしの今昔館 (江戸時代の大阪を体験)"},
+                {zh: "交通：地鐵谷町線 (天神橋筋六丁目 -> 東梅田) 步行至藍天大廈", ja: "交通：地下鉄谷町線 (天神橋筋六丁目 -> 東梅田) 徒歩でスカイビルへ"},
+                {zh: "傍晚：梅田藍天大廈 空中庭園展望台 (周遊卡免費，需注意免費入場時間)", ja: "夕方：梅田スカイビル 空中庭園展望台 (周遊パスで無料、入場時間に注意)"},
+                {zh: "交通：地鐵御堂筋線 (梅田 -> 動物園前)", ja: "交通：地下鉄御堂筋線 (梅田 -> 動物園前)"},
+                {zh: "晚餐：新世界周邊美食 (如：串炸/土手燒)", ja: "夕食：新世界周辺グルメ (例：串カツ/どて焼き)"},
+                {zh: "回程：步行回民宿", ja: "帰路：徒歩で宿へ戻る"}
             ] },
-            { day: 7, location: "大阪：美食購物天堂", theme: "心齋橋與道頓堀的熱鬧氛圍", location_ja: "大阪：グルメとショッピング天国", theme_ja: "心斎橋と道頓堀のにぎやかな雰囲気", details: [
-                {zh: "🐟 上午：黑門市場 (大阪人的廚房，品嘗新鮮海產)", ja: "🐟 午前：黒門市場（大阪の台所、新鮮な海産物を味わう）"}, 
-                {zh: "🍣 午餐：在市場內解決", ja: "🍣 昼食：市場内で済ませる"}, 
-                {zh: "🛍️ 下午：心齋橋筋商店街 (購物血拼)", ja: "🛍️ 午後：心斎橋筋商店街（ショッピングを満喫）"}, 
-                {zh: "🏃 傍晚：道頓堀 (觀看固力果跑跑人招牌)", ja: "🏃 夕方：道頓堀（グリコのランナー看板を見る）"}, 
-                {zh: "🐙 晚餐：大阪燒、章魚燒、金龍拉麵等在地美食巡禮", ja: "🐙 夕食：お好み焼き、たこ焼き、金龍ラーメンなどの地元グルメ巡り"}
+            { day: 7, location: "大阪：周遊卡精華(南)", theme: "通天閣與道頓堀遊船", location_ja: "大阪：周遊パス(南)", theme_ja: "通天閣と道頓堀クルーズ", details: [
+                {zh: "交通：使用大阪周遊卡 (Day 2)", ja: "交通：大阪周遊パス利用 (2日目)"},
+                {zh: "上午：步行前往通天閣 (含塔式滑塊/溜滑梯)", ja: "午前：徒歩で通天閣へ (タワースライダー含む)"},
+                {zh: "午餐：新世界串炸 (如: Daruma)", ja: "昼食：新世界串カツ (だるまなど)"},
+                {zh: "交通：地鐵堺筋線 (惠美須町 -> 長堀橋) 轉 鶴見綠地線 -> 心齋橋", ja: "交通：地下鉄堺筋線 (恵美須町 -> 長堀橋) 乗換 鶴見緑地線 -> 心斎橋"},
+                {zh: "購物：心齋橋商店街逛街", ja: "買い物：心斎橋商店街でショッピング"},
+                {zh: "散步：步行前往道頓堀，預約水上觀光船", ja: "散策：徒歩で道頓堀へ、水上観光船を予約"},
+                {zh: "傍晚：道頓堀水上觀光船 (周遊卡免費)", ja: "夕方：道頓堀水上観光船 (周遊パスで無料)"},
+                {zh: "晚餐：Mizuno (美津の) 大阪燒 (米其林推薦)", ja: "夕食：美津の お好み焼き (ミシュラン掲載)"},
+                {zh: "交通：地鐵御堂筋線 (難波 -> 動物園前)", ja: "交通：地下鉄御堂筋線 (難波 -> 動物園前)"},
+                {zh: "回程：步行回民宿", ja: "帰路：徒歩で宿へ戻る"}
             ] },
-            { day: 8, location: "大阪：環球影城", theme: "一整天的歡樂與刺激", location_ja: "大阪：ユニバーサル・スタジオ・ジャパン", theme_ja: "一日中楽しさとスリルを満喫", details: [
-                {zh: "🎢 全日：日本環球影城 (USJ)", ja: "🎢 終日：ユニバーサル・スタジオ・ジャパン (USJ)"}, 
-                {zh: "🍄 必玩：超級任天堂世界 (Super Nintendo World)、哈利波特魔法世界", ja: "🍄 必須プレイ：スーパー・ニンテンドー・ワールド、ウィザーディング・ワールド・オブ・ハリー・ポッター"}, 
-                {zh: "🍔 午餐/晚餐：在園區內解決", ja: "🍔 昼食/夕食：パーク内で済ませる"}, 
-                {zh: "🎟️ 備註：建議提前購買快速通關票", ja: "🎟️ 備考：ユニバーサル・エクスプレス・パスの事前購入を推奨"}
+            { day: 8, location: "大阪：箕面勝尾寺", theme: "勝運之寺與黑門市場", location_ja: "大阪：箕面勝尾寺", theme_ja: "勝運の寺と黒門市場", details: [
+                {zh: "交通：使用大阪地鐵巴士乘車券 (Enjoy Eco Card) (公車需額外付費)", ja: "交通：エンジョイエコカード利用 (バスは別料金)"},
+                {zh: "移動：地鐵御堂筋線 (動物園前 -> 箕面萱野) 直達", ja: "移動：地下鉄御堂筋線 (動物園前 -> 箕面萱野) 直通"},
+                {zh: "轉乘：搭乘公車前往勝尾寺", ja: "乗換：バスで勝尾寺へ"},
+                {zh: "景點：勝尾寺 (達摩不倒翁/祈求勝運)", ja: "観光：勝尾寺 (だるま/勝運祈願)"},
+                {zh: "移動：公車回箕面萱野 -> 地鐵御堂筋線 (箕面萱野 -> 難波) -> 轉千日前線 (難波 -> 日本橋)", ja: "移動：バスで箕面萱野へ -> 地下鉄御堂筋線 (箕面萱野 -> 難波) -> 乗換 千日前線 (難波 -> 日本橋)"},
+                {zh: "午餐：黑門市場周邊 (海鮮丼/和牛)", ja: "昼食：黒門市場周辺 (海鮮丼/和牛)"},
+                {zh: "下午：黑門市場 & 日本橋 (Denden Town) 動漫/電器街", ja: "午後：黒門市場 & 日本橋 (でんでんタウン) アニメ/電気街"},
+                {zh: "晚餐：Fukutaro (福太郎) 大阪燒 (難波名店)", ja: "夕食：福太郎 お好み焼き (難波の名店)"},
+                {zh: "購物：唐吉軻德 難波/道頓堀店 (補貨)", ja: "買い物：ドン・キホーテ 難波/道頓堀店 (買い足し)"},
+                {zh: "回程：搭車回民宿", ja: "帰路：宿へ戻る"}
             ] },
-            { day: 9, location: "大阪：血拼與返程", theme: "最後購物與甜蜜歸途", location_ja: "大阪：最終ショッピングと帰路", theme_ja: "最後のお土産購入と帰国", details: [
-                {zh: "🛍️ 上午：根據航班時間安排最後購物，例如難波或 Rinku Premium Outlets (臨空城)", ja: "🛍️ 午前：フライト時間に合わせて最終ショッピング（例：難波、りんくうプレミアム・アウトレット）"}, 
-                {zh: "🍜 午餐：最後的日式午餐", ja: "🍜 昼食：最後の和食ランチ"}, 
-                {zh: "🛄 下午：前往關西國際機場(KIX)或伊丹機場(ITM)", ja: "🛄 午後：関西国際空港(KIX)または伊丹空港(ITM)へ移動"}, 
-                {zh: "👋 辦理登機手續，搭機返回", ja: "👋 チェックイン手続き後、帰国"}
+            { day: 9, location: "大阪：返程", theme: "最後採買與前往機場", location_ja: "大阪：帰路", theme_ja: "最後の買い物と空港へ", details: [
+                {zh: "上午：整理行李，Check-out", ja: "午前：荷造り、チェックアウト"},
+                {zh: "前往：南海新今宮站 (離民宿最近的南海車站)", ja: "移動：南海新今宮駅 (宿から最寄りの南海駅)"},
+                {zh: "搭乘：南海電鐵 (空港急行/Rapi:t) 前往關西機場", ja: "乗車：南海電鉄 (空港急行/ラピート) で関西空港へ"},
+                {zh: "午餐：關西機場內用餐", ja: "昼食：関西空港内で食事"},
+                {zh: "辦理登機手續，搭機返回", ja: "チェックイン手続き後、帰国"}
             ] }
         ];
 
         const notesData = {
             zh: [
-                "交通：建議購買 ICOCA 或 Suica 等交通卡，方便搭乘地鐵和巴士。",
+                "交通：第6、7天使用大阪周遊卡，可免費進入多個景點並無限搭乘地鐵。",
+                "交通：第8天前往勝尾寺，建議使用大阪地鐵一日券 (Enjoy Eco Card) 抵達箕面萱野站，轉乘公車需自費(或刷IC卡)。",
                 "公車：京都市內主要景點多靠公車，可考慮購買一日券 (但需評估是否搭乘超過 3 趟)。",
                 "現金：雖然日本許多地方可刷卡，但小型店家或寺廟仍需現金，建議備足。",
                 "WiFi：租借行動 WiFi 或購買 SIM 卡，確保導航順暢。",
@@ -344,7 +661,8 @@
                 "退稅：大型百貨公司消費滿額可退稅，記得攜帶護照隨時辦理。"
             ],
             ja: [
-                "交通：ICOCAやSuicaなどの交通系ICカードの購入をおすすめします。地下鉄やバスの乗車に便利です。",
+                "交通：6日目・7日目は大阪周遊パスを使用し、多くの観光スポットに無料で入場でき、地下鉄も乗り放題です。",
+                "交通：8日目の勝尾寺へは、エンジョイエコカード（地下鉄1日券）で箕面萱野駅まで行き、そこからバス（別料金/ICカード）がおすすめです。",
                 "バス：京都市内の主要な観光地はバス移動が中心です。一日乗車券の購入を検討しましょう（3回以上の乗車で元が取れます）。",
                 "現金：多くの場所でカード利用が可能ですが、小さなお店や寺社では現金が必要な場合があるため、準備しておきましょう。",
                 "WiFi：モバイルWiFiをレンタルするかSIMカードを購入し、ナビゲーションがスムーズに行えるようにしましょう。",
@@ -399,9 +717,10 @@
         function extractLocationName(detail) {
             let cleanedDetail = detail.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}/gu, '').trim(); 
             
+            // 移除常見前綴，保留核心地名
             const prefixes = [
-                "上午：", "下午：", "午餐：", "晚餐：", "傍晚：", "晚上：", 
-                "必玩：", "全日：", "備註：", "例如：", "必備：", "必去：",
+                "早起：", "早起き：", "交通：", "搭乘：", "乗車：", "時間：", "下車：", "景點：", "観光：", "散步：", "散策：", "午餐/下午：", "昼食/午後：", "晚餐：", "夕食：", "回程：", "歸路：", "動漫巡禮 1：", "アニメ巡り 1：", "動漫巡禮 2：", "アニメ巡り 2：", "動漫巡禮 3：", "アニメ巡り 3：", "動漫巡禮：", "アニメ巡り：", "預約：", "予約：", "歸還：", "返却：", "點心：", "おやつ：", "購物：", "買い物：", "退房：", "チェックアウト：", "寄放行李：", "荷物預け：", "步行：", "徒歩：", "寄放行李/購物：", "荷物預け/買い物：", "先到飯店APA Hotel 寄放行李", "まずAPAホテルに荷物を預ける", "上午：", "下午：", "午餐：", "晚餐：", "傍晚：", "晚上：", 
+                "必玩：", "全日：", "備註：", "例如：", "必備：", "必去：", "體驗：", "体験：", "移動：", "前往：",
                 "搭乘 HARUKA 前往", "搭乘京都奈良線到",
                 "午前：", "午後：", "昼食：", "夕食：", "夕方：", "終日：", "備考：",
                 "で京都駅へ移動", "で東福寺駅へ"
@@ -418,12 +737,33 @@
             return cleanedDetail;
         }
 
+        // --- 新增：智慧圖示判斷 ---
+        function getSmartIcon(text) {
+            const t = text.toLowerCase();
+            if (t.includes("和服") || t.includes("kimono") || t.includes("着物") || t.includes("ookini")) return "👘";
+            if (t.includes("抹茶") || t.includes("茶") || t.includes("matcha") || t.includes("tea") || t.includes("點心") || t.includes("冰淇淋")) return "🍵";
+            if (t.includes("公車") || t.includes("巴士") || t.includes("bus") || t.includes("バス") || t.includes("202") || t.includes("207")) return "🚌";
+            if (t.includes("步行") || t.includes("散步") || t.includes("走") || t.includes("下車") || t.includes("walk") || t.includes("散策") || t.includes("徒歩")) return "🚶";
+            if (t.includes("午餐") || t.includes("晚餐") || t.includes("吃") || t.includes("食") || t.includes("lunch") || t.includes("dinner") || t.includes("釜飯") || t.includes("拉麵") || t.includes("鮪魚") || t.includes("料理")) return "🍽️";
+            if (t.includes("jr") || t.includes("地鐵") || t.includes("電車") || t.includes("train") || t.includes("搭乘") || t.includes("haruka") || t.includes("新幹線") || t.includes("subway") || t.includes("奈良線") || t.includes("京阪") || t.includes("近鐵") || t.includes("南海")) return "🚃";
+            if (t.includes("購物") || t.includes("逛街") || t.includes("買") || t.includes("shopping") || t.includes("market") || t.includes("商店街") || t.includes("outlets") || t.includes("唐吉軻德") || t.includes("don quijote") || t.includes("edion") || t.includes("愛電王")) return "🛍️";
+            if (t.includes("動漫") || t.includes("anime") || t.includes("駿河屋") || t.includes("安利美特") || t.includes("羅針盤") || t.includes("アニメ") || t.includes("任天堂")) return "🧸";
+            if (t.includes("景點") || t.includes("寺") || t.includes("神社") || t.includes("temple") || t.includes("shrine") || t.includes("castle") || t.includes("大阪城") || t.includes("清水寺") || t.includes("平等院") || t.includes("鳥居") || t.includes("宇治橋") || t.includes("東大寺") || t.includes("公園") || t.includes("通天閣") || t.includes("勝尾寺")) return "📸";
+            if (t.includes("飯店") || t.includes("民宿") || t.includes("hotel") || t.includes("check-in") || t.includes("住宿") || t.includes("宿泊") || t.includes("check-out") || t.includes("退房") || t.includes("寄放行李") || t.includes("apa") || t.includes("彩之宿") || t.includes("彩之宿202")) return "🏨";
+            if (t.includes("機場") || t.includes("airport") || t.includes("空港") || t.includes("飛機")) return "🛫";
+            if (t.includes("早起") || t.includes("morning")) return "🌅";
+            if (t.includes("鹿")) return "🦌";
+            
+            return "📍"; // Default
+        }
+
         /**
          * Function to determine if a detail item needs a navigation button.
          */
         function requiresNavigation(locationName, textContent) {
-            const excludes = ['晚餐', '午餐', '閒逛', '抵達', '辦理登機', '搭機返回', '夕食', '昼食', '散策', '到着', 'チェックイン'];
-            const location_is_key = locationName.includes('機場') || locationName.includes('車站') || locationName.includes('民宿') || locationName.includes('飯店') || locationName.includes('東福寺駅');
+            const excludes = ['閒逛', '辦理登機', '搭機返回', '散策', '到着', 'チェックイン', '體驗'];
+            // 關鍵字檢測：包含這些字詞的項目通常需要導航
+            const location_is_key = locationName.includes('機場') || locationName.includes('車站') || locationName.includes('民宿') || locationName.includes('飯店') || locationName.includes('東福寺駅') || locationName.includes('巴士站') || locationName.includes('バス停') || locationName.includes('下車') || locationName.includes('但馬屋') || locationName.includes('動漫') || locationName.includes('アニメ') || locationName.includes('清水寺') || locationName.includes('駿河屋') || locationName.includes('羅針盤') || locationName.includes('安利美特') || locationName.includes('Animate') || locationName.includes('Lashinbang') || locationName.includes('Surugaya') || locationName.includes('ookini') || locationName.includes('宇治') || locationName.includes('平等院') || locationName.includes('中村藤吉') || locationName.includes('伏見稻荷') || locationName.includes('唐吉軻德') || locationName.includes('Don Quijote') || locationName.includes('奈良') || locationName.includes('東大寺') || locationName.includes('APA') || locationName.includes('志津香') || locationName.includes('鮪魚小屋') || locationName.includes('Maguro') || locationName.includes('午餐') || locationName.includes('晚餐') || locationName.includes('夕食') || locationName.includes('昼食') || locationName.includes('梅田') || locationName.includes('八重勝') || locationName.includes('EDION') || locationName.includes('愛電王') || locationName.includes('Kamesushi') || locationName.includes('亀すし') || locationName.includes('彩之宿') || locationName.includes('彩の宿') || locationName.includes('Tokisushi') || locationName.includes('ときすし') || locationName.includes('通天閣') || locationName.includes('動物園前') || locationName.includes('大阪城') || locationName.includes('御座船') || locationName.includes('今昔館') || locationName.includes('藍天大廈') || locationName.includes('春駒') || locationName.includes('きじ') || locationName.includes('Mizuno') || locationName.includes('黑門') || locationName.includes('勝尾寺') || locationName.includes('日本橋') || locationName.includes('福太郎') || locationName.includes('Fukutaro') || locationName.includes('新今宮');
 
             if (location_is_key) {
                 return true;
@@ -450,6 +790,8 @@
             document.getElementById('tab-weather').innerHTML = texts.tab_weather;
             document.getElementById('tab-notes').innerHTML = texts.tab_notes;
             document.getElementById('tab-checklist').innerHTML = texts.tab_checklist;
+            document.getElementById('tab-expenses').innerHTML = texts.tab_expenses;
+            document.getElementById('tab-translations').innerHTML = texts.tab_translations;
 
             document.getElementById('weather-section-title').textContent = texts.section_weather_title;
             document.getElementById('weather-source').textContent = texts.section_weather_source;
@@ -457,16 +799,49 @@
             document.getElementById('checklist-section-title').textContent = texts.section_checklist_title;
             document.getElementById('checklist-bring-title').textContent = texts.checklist_bring_title;
             document.getElementById('checklist-buy-title').textContent = texts.checklist_buy_title;
+            document.getElementById('expenses-section-title').textContent = texts.section_expenses_title;
+            document.getElementById('translations-section-title').textContent = texts.section_translations_title;
 
             document.getElementById('loading-text').textContent = texts.loading_text;
             
             // Modal texts
-            document.getElementById('modal-title').textContent = texts.modal_title;
-            document.querySelector('#cost-modal p').textContent = texts.modal_desc;
-            document.querySelector('#cost-modal button:first-child').textContent = texts.modal_cancel;
-            document.querySelector('#cost-modal button:last-child').textContent = texts.modal_confirm;
+            document.querySelector('#cost-modal button[onclick="closeModal()"]').textContent = texts.modal_cancel;
+            document.querySelector('#cost-modal button[onclick="confirmModalCost()"]').textContent = texts.modal_confirm;
+            document.getElementById('label-category').textContent = texts.label_category;
+            document.getElementById('label-detail').textContent = texts.label_detail;
+            document.getElementById('label-amount').textContent = texts.label_amount;
+
+            // Expense UI translations
+            document.querySelector('#expense-category option[value="transport"]').textContent = texts.cat_transport;
+            document.querySelector('#expense-category option[value="food"]').textContent = texts.cat_food;
+            document.querySelector('#expense-category option[value="shopping"]').textContent = texts.cat_shopping;
+            document.querySelector('#expense-category option[value="other"]').textContent = texts.cat_other;
+            document.getElementById('expense-detail').placeholder = texts.ph_detail;
+            document.getElementById('expense-amount').placeholder = texts.ph_amount;
+            document.getElementById('btn-add-expense').textContent = texts.btn_confirm;
+            
+            // Update Headers
+            const categories = document.querySelectorAll('.header-category');
+            categories.forEach(el => el.textContent = texts.header_category);
+            const details = document.querySelectorAll('.header-detail');
+            details.forEach(el => el.textContent = texts.header_detail);
+            const amounts = document.querySelectorAll('.header-amount');
+            amounts.forEach(el => el.textContent = texts.header_amount);
+
+            document.getElementById('label-custom-total').textContent = texts.label_custom_total;
+            document.getElementById('custom-expense-list-title').textContent = texts.custom_list_title;
+            document.getElementById('itinerary-expense-list-title').textContent = texts.itinerary_list_title;
+
+            // Custom Checklist translations
+            document.getElementById('checklist-custom-title').textContent = texts.checklist_custom_title;
+            document.getElementById('checklist-input').placeholder = texts.checklist_input_placeholder;
+            document.getElementById('btn-add-checklist').textContent = texts.btn_add;
 
             renderStaticSections(lang);
+            renderCustomExpenses(); 
+            renderItineraryExpensesInTab(); 
+            renderMyChecklist(); // Render user custom checklist items
+            renderCommonPhrases(lang); // Render translations
 
             const currentActiveDay = document.querySelector('.day-btn.active');
             if (currentActiveDay) {
@@ -489,69 +864,412 @@
             updateStaticTexts(currentLang);
         }
 
-        // 3. Modal 相關功能
-        function openCostModal(dayIndex, itemIndex) {
+        // --- Utility Functions for Expense Management ---
+        function generateId() {
+            return Math.random().toString(36).substr(2, 9);
+        }
+
+        // 3. Modal 相關功能 (統一處理行程與額外消費)
+        function openCostModalForItinerary(dayIndex, itemIndex) {
+            currentEditContext = { 
+                type: 'itinerary_add', 
+                dayIndex, 
+                itemIndex 
+            };
+            
+            // 重置表單
+            document.getElementById('modal-title').textContent = i18n[currentLang].modal_title_add;
+            document.getElementById('modal-expense-category').value = 'transport';
+            document.getElementById('modal-expense-detail').value = '';
+            document.getElementById('modal-expense-amount').value = '';
+            
             const modal = document.getElementById('cost-modal');
-            const input = document.getElementById('cost-input');
-            const key = `day_${dayIndex}_item_${itemIndex}`;
-            
-            currentEditContext = { dayIndex, itemIndex };
-            input.value = costData[key] || "";
-            
             modal.classList.remove('hidden');
-            setTimeout(() => input.focus(), 100);
+            setTimeout(() => document.getElementById('modal-expense-detail').focus(), 100);
+        }
+
+        function openEditModal(type, id) {
+            // Find item
+            let item;
+            if (type === 'custom') {
+                item = customExpenses.find(x => x.id === id);
+                currentEditContext = { type: 'custom_edit', id };
+            } else {
+                item = itineraryExpenses.find(x => x.id === id);
+                currentEditContext = { type: 'itinerary_edit', id };
+            }
+
+            if (!item) return;
+
+            document.getElementById('modal-title').textContent = i18n[currentLang].modal_title_edit;
+            document.getElementById('modal-expense-category').value = item.category;
+            document.getElementById('modal-expense-detail').value = item.detail;
+            document.getElementById('modal-expense-amount').value = item.amount;
+
+            const modal = document.getElementById('cost-modal');
+            modal.classList.remove('hidden');
         }
 
         function closeModal() {
             const modal = document.getElementById('cost-modal');
             modal.classList.add('hidden');
-            currentEditContext = { dayIndex: null, itemIndex: null };
+            currentEditContext = { type: null, id: null, dayIndex: null, itemIndex: null };
         }
 
-        function confirmCost() {
-            const input = document.getElementById('cost-input');
-            const { dayIndex, itemIndex } = currentEditContext;
-            const key = `day_${dayIndex}_item_${itemIndex}`;
+        function confirmModalCost() {
+            const category = document.getElementById('modal-expense-category').value;
+            const detailInput = document.getElementById('modal-expense-detail');
+            const amountInput = document.getElementById('modal-expense-amount');
             
-            let val = input.value;
-            // 轉換全形數字
-            val = val.replace(/[０-９]/g, function(s) {
+            const detail = detailInput.value.trim();
+            let amountVal = amountInput.value;
+            // 全形轉半形
+            amountVal = amountVal.replace(/[０-９]/g, function(s) {
                 return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
             });
+            const amount = parseFloat(amountVal);
 
-            const amount = parseFloat(val);
-            if (!isNaN(amount)) {
-                costData[key] = amount;
-            } else if (val.trim() === "") {
-                delete costData[key];
+            if (!detail) {
+                alert(currentLang === 'zh' ? "請輸入明細" : "詳細を入力してください");
+                return;
             }
-            
+            if (isNaN(amount) || amount <= 0) {
+                alert(currentLang === 'zh' ? "請輸入有效金額" : "有効な金額を入力してください");
+                return;
+            }
+
+            // 處理不同類型的提交
+            if (currentEditContext.type === 'itinerary_add') {
+                itineraryExpenses.push({
+                    id: generateId(),
+                    dayIndex: currentEditContext.dayIndex,
+                    itemIndex: currentEditContext.itemIndex,
+                    category,
+                    detail,
+                    amount
+                });
+                showDay(currentEditContext.dayIndex); // 刷新行程頁面
+                renderItineraryExpensesInTab(); // 刷新總表
+            } else if (currentEditContext.type === 'itinerary_edit') {
+                const idx = itineraryExpenses.findIndex(x => x.id === currentEditContext.id);
+                if (idx !== -1) {
+                    itineraryExpenses[idx].category = category;
+                    itineraryExpenses[idx].detail = detail;
+                    itineraryExpenses[idx].amount = amount;
+                    renderItineraryExpensesInTab();
+                    updateTotalDisplays();
+                }
+            } else if (currentEditContext.type === 'custom_edit') {
+                const idx = customExpenses.findIndex(x => x.id === currentEditContext.id);
+                if (idx !== -1) {
+                    customExpenses[idx].category = category;
+                    customExpenses[idx].detail = detail;
+                    customExpenses[idx].amount = amount;
+                    renderCustomExpenses();
+                    updateTotalDisplays();
+                }
+            }
+
             closeModal();
-            showDay(dayIndex); // 更新畫面
         }
 
-        // 4. 計算每日總花費
-        function calculateDailyTotal(dayIndex) {
-            let total = 0;
-            const dayData = itineraryData[dayIndex];
-            dayData.details.forEach((_, index) => {
-                const key = `day_${dayIndex}_item_${index}`;
-                if (costData[key]) {
-                    total += costData[key];
-                }
-            });
-            return total;
-        }
+        function deleteExpense(type, id) {
+            if(!confirm(i18n[currentLang].confirm_del)) return;
 
-        // 5. 計算整趟旅程總花費
-        function calculateTripTotal() {
-            let total = 0;
-            for (const key in costData) {
-                if (costData.hasOwnProperty(key)) {
-                    total += costData[key];
-                }
+            if (type === 'custom') {
+                const idx = customExpenses.findIndex(x => x.id === id);
+                if (idx !== -1) customExpenses.splice(idx, 1);
+                renderCustomExpenses();
+            } else {
+                const idx = itineraryExpenses.findIndex(x => x.id === id);
+                if (idx !== -1) itineraryExpenses.splice(idx, 1);
+                renderItineraryExpensesInTab();
             }
-            return total;
+            updateTotalDisplays();
+        }
+
+        // 4. 計算每日總消費 (行程內)
+        function calculateDailyTotal(dayIndex) {
+            return itineraryExpenses
+                .filter(item => item.dayIndex === dayIndex)
+                .reduce((sum, item) => sum + item.amount, 0);
+        }
+        
+        // 4.1 計算單一行程項目總消費
+        function calculateItemTotal(dayIndex, itemIndex) {
+            return itineraryExpenses
+                .filter(item => item.dayIndex === dayIndex && item.itemIndex === itemIndex)
+                .reduce((sum, item) => sum + item.amount, 0);
+        }
+
+        // 5. 計算整趟旅程總消費 (包含行程內 + 額外新增)
+        function calculateTripTotal() {
+            const itinTotal = itineraryExpenses.reduce((sum, item) => sum + item.amount, 0);
+            const customTotal = customExpenses.reduce((sum, item) => sum + item.amount, 0);
+            return itinTotal + customTotal;
+        }
+
+        // --- 自定義必買清單功能 ---
+        function addChecklistItem() {
+            const input = document.getElementById('checklist-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            myChecklist.push({ id: generateId(), text: text });
+            input.value = '';
+            renderMyChecklist();
+        }
+
+        function removeChecklistItem(id) {
+            const idx = myChecklist.findIndex(item => item.id === id);
+            if (idx !== -1) {
+                myChecklist.splice(idx, 1);
+                renderMyChecklist();
+            }
+        }
+
+        function renderMyChecklist() {
+            const list = document.getElementById('custom-checklist-list');
+            list.innerHTML = myChecklist.map(item => `
+                <li class="p-2 bg-white rounded-lg shadow-sm border border-purple-100 flex justify-between items-center group">
+                    <span class="text-purple-900 font-medium">${item.text}</span>
+                    <button onclick="removeChecklistItem('${item.id}')" class="text-gray-400 hover:text-red-500 p-1 opacity-60 hover:opacity-100 transition-opacity">
+                        ✕
+                    </button>
+                </li>
+            `).join('');
+        }
+
+        // --- 常用翻譯功能 (新功能) ---
+        function renderCommonPhrases(lang) {
+            const container = document.getElementById('translations-list');
+            const categories = {};
+            
+            commonPhrases.forEach(item => {
+                if (!categories[item.category]) categories[item.category] = [];
+                categories[item.category].push(item);
+            });
+
+            // Mapping for category titles
+            const catMap = {
+                'greeting': { zh: '問候與基本', ja: '挨拶・基本' },
+                'dining': { zh: '餐飲點餐', ja: '食事・注文' },
+                'shopping': { zh: '購物結帳', ja: '買い物' },
+                'transport': { zh: '交通詢問', ja: '交通' },
+                'lodging': { zh: '住宿飯店', ja: '宿泊' }
+            };
+
+            let html = '';
+            for (const cat in categories) {
+                const title = catMap[cat][lang];
+                html += `
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+                        <div class="bg-indigo-50 px-4 py-2 font-bold text-indigo-800 text-sm border-b border-indigo-100">
+                            ${title}
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            ${categories[cat].map((phrase, idx) => `
+                                <div class="flex justify-between items-center p-3 hover:bg-gray-50">
+                                    <div class="text-gray-800 font-medium">${phrase.zh}</div>
+                                    <button onclick="openTranslationModal('${phrase.zh}', '${phrase.ja}', '${phrase.romaji}')" class="bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold py-1.5 px-3 rounded-full shadow-sm whitespace-nowrap transition-colors flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
+                                        ${i18n[lang].btn_trans}
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function openTranslationModal(zh, ja, romaji) {
+            document.getElementById('trans-modal-source').textContent = zh;
+            document.getElementById('trans-modal-target').textContent = ja;
+            document.getElementById('trans-modal-romaji').textContent = romaji;
+            
+            const modal = document.getElementById('translation-modal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeTranslationModal() {
+            document.getElementById('translation-modal').classList.add('hidden');
+        }
+
+        // --- 巴士時刻表功能 (新功能) ---
+        function openBusModal() {
+            document.getElementById('bus-timetable-modal').classList.remove('hidden');
+        }
+
+        function closeBusModal() {
+            document.getElementById('bus-timetable-modal').classList.add('hidden');
+        }
+
+        // --- 新增：自定義消費功能 ---
+        function addCustomExpense() {
+            const categorySelect = document.getElementById('expense-category');
+            const detailInput = document.getElementById('expense-detail');
+            const amountInput = document.getElementById('expense-amount');
+
+            const category = categorySelect.value;
+            const detail = detailInput.value.trim();
+            let amountVal = amountInput.value;
+            amountVal = amountVal.replace(/[０-９]/g, function(s) {
+                return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+            });
+            const amount = parseFloat(amountVal);
+
+            if (!detail) {
+                alert(currentLang === 'zh' ? "請輸入明細" : "詳細を入力してください");
+                return;
+            }
+            if (detail.length > 10) {
+                alert(currentLang === 'zh' ? "明細限10字以內" : "詳細は10文字以内で入力してください");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                alert(currentLang === 'zh' ? "請輸入有效金額" : "有効な金額を入力してください");
+                return;
+            }
+
+            customExpenses.push({
+                id: generateId(),
+                category: category,
+                detail: detail,
+                amount: amount
+            });
+
+            // 清空輸入
+            detailInput.value = '';
+            amountInput.value = '';
+            
+            renderCustomExpenses();
+            updateTotalDisplays();
+        }
+
+        function editCustomExpense(index) {
+            const item = customExpenses[index];
+            document.getElementById('expense-category').value = item.category;
+            document.getElementById('expense-detail').value = item.detail;
+            document.getElementById('expense-amount').value = item.amount;
+            
+            // Remove the item so "Add" acts as "Update"
+            customExpenses.splice(index, 1);
+            renderCustomExpenses();
+            updateTotalDisplays();
+        }
+
+        function deleteCustomExpense(index) {
+            if(confirm(currentLang === 'zh' ? '確定刪除此筆消費？' : 'この項目を削除しますか？')) {
+                customExpenses.splice(index, 1);
+                renderCustomExpenses();
+                updateTotalDisplays();
+            }
+        }
+
+        function renderCustomExpenses() {
+            const listContainer = document.getElementById('expense-list-container');
+            const emptyMsg = document.getElementById('empty-expense-msg');
+            const texts = i18n[currentLang];
+
+            if (customExpenses.length === 0) {
+                listContainer.innerHTML = `<div id="empty-expense-msg" class="p-4 text-center text-gray-400 text-sm">${texts.msg_no_expense}</div>`;
+                return;
+            }
+
+            let html = '';
+            const categoryMap = {
+                'transport': texts.cat_transport,
+                'food': texts.cat_food,
+                'shopping': texts.cat_shopping,
+                'other': texts.cat_other
+            };
+
+            customExpenses.forEach((item) => {
+                html += `
+                    <div class="grid grid-cols-12 gap-2 p-2 items-center hover:bg-gray-50 border-b border-gray-50">
+                        <div class="col-span-2 text-center">
+                            <span class="inline-block px-1.5 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-700 whitespace-nowrap">
+                                ${categoryMap[item.category]}
+                            </span>
+                        </div>
+                        <div class="col-span-5 text-sm text-gray-700 truncate">
+                            ${item.detail}
+                        </div>
+                        <div class="col-span-3 text-right font-bold text-gray-800 pr-2">
+                            ${item.amount.toLocaleString()}
+                        </div>
+                        <div class="col-span-2 flex justify-end space-x-1">
+                            <button onclick="openEditModal('custom', '${item.id}')" class="text-blue-500 hover:bg-blue-100 p-1 rounded">✎</button>
+                            <button onclick="deleteExpense('custom', '${item.id}')" class="text-red-500 hover:bg-red-100 p-1 rounded">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listContainer.innerHTML = html;
+        }
+
+        // Render "Itinerary Expenses" inside the Expenses Tab
+        function renderItineraryExpensesInTab() {
+            const container = document.getElementById('itinerary-expense-list-container');
+            const texts = i18n[currentLang];
+            let html = '';
+
+            const categoryMap = {
+                'transport': texts.cat_transport,
+                'food': texts.cat_food,
+                'shopping': texts.cat_shopping,
+                'other': texts.cat_other
+            };
+
+            if (itineraryExpenses.length === 0) {
+                container.innerHTML = `<div class="p-4 text-center text-gray-400 text-sm">${texts.msg_no_itinerary_expense}</div>`;
+                updateTotalDisplays();
+                return;
+            }
+
+            // Sort by Day then Item
+            const sorted = [...itineraryExpenses].sort((a, b) => {
+                if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
+                return a.itemIndex - b.itemIndex;
+            });
+
+            sorted.forEach((item) => {
+                const dayText = `D${item.dayIndex}`;
+                html += `
+                    <div class="grid grid-cols-12 gap-2 p-2 items-center hover:bg-gray-50 border-b border-gray-50">
+                        <div class="col-span-2 text-center">
+                            <span class="inline-block px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 whitespace-nowrap">
+                                ${categoryMap[item.category]}
+                            </span>
+                        </div>
+                        <div class="col-span-5 text-sm text-gray-700 truncate">
+                            <span class="text-xs font-bold text-gray-400 mr-1">${dayText}</span>${item.detail}
+                        </div>
+                        <div class="col-span-3 text-right font-bold text-gray-800 pr-2">
+                            ${item.amount.toLocaleString()}
+                        </div>
+                        <div class="col-span-2 flex justify-end space-x-1">
+                            <button onclick="openEditModal('itinerary', '${item.id}')" class="text-blue-500 hover:bg-blue-100 p-1 rounded">✎</button>
+                            <button onclick="deleteExpense('itinerary', '${item.id}')" class="text-red-500 hover:bg-red-100 p-1 rounded">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateTotalDisplays();
+        }
+
+        function updateTotalDisplays() {
+            const tripTotal = calculateTripTotal();
+            const summaryTotalEl = document.getElementById('custom-total-amount');
+            if (summaryTotalEl) summaryTotalEl.textContent = tripTotal.toLocaleString();
+            
+            const dailyTripTotalEl = document.getElementById('trip-total-amount');
+            if (dailyTripTotalEl) dailyTripTotalEl.textContent = tripTotal.toLocaleString();
         }
 
 
@@ -590,6 +1308,7 @@
             const lang = currentLang;
             const navText = i18n[lang].nav_button;
             const costText = i18n[lang].cost_button;
+            const timetableText = i18n[lang].btn_timetable;
             const costDisplayPrefix = i18n[lang].cost_display_prefix;
 
             
@@ -611,10 +1330,20 @@
                     ${day.details.map((item, index) => {
                         
                         const detail = item[lang];
-                        const match = detail.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}/u);
-                        const icon = match ? match[0] : '📍'; 
+                        // Extract icon and text content for clean display
+                        // Check if text already has an emoji at the start
+                        let icon = '📍';
+                        let textContent = detail;
+                        const match = detail.match(/^[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}/u);
                         
-                        let textContent = detail.replace(icon, '').trim(); 
+                        if (match) {
+                            icon = match[0];
+                            textContent = detail.replace(icon, '').trim(); 
+                        } else {
+                            // Smart Icon Logic
+                            icon = getSmartIcon(detail);
+                            textContent = detail;
+                        }
                         
                         let displayContent = textContent;
                         if (displayContent.includes('(住宿地址:')) {
@@ -623,7 +1352,44 @@
                         
                         const locationName = extractLocationName(textContent);
                         const cityContext = day.day <= 4 ? (lang === 'zh' ? "京都 日本" : "京都 日本") : (lang === 'zh' ? "大阪 日本" : "大阪 日本");
-                        const mapQuery = encodeURIComponent(locationName + ", " + cityContext); 
+                        
+                        // Special handling for Kiyomizu-dera to navigate to entrance
+                        let searchLocation = locationName;
+                        if (locationName.includes('清水寺')) {
+                            searchLocation = lang === 'zh' ? '清水寺 仁王門' : '清水寺 仁王門'; 
+                        } else if (textContent.includes('ookini-kimono') || textContent.includes('歸還和服') || textContent.includes('着物を返却')) {
+                            searchLocation = 'ookiniおおきに着物レンタル伏見稲荷店';
+                        } else if (textContent.includes('東福寺 -> 稻荷站') || textContent.includes('東福寺 -> 稲荷駅')) {
+                            searchLocation = '東福寺站'; // Or Tofukuji Station
+                        } else if (textContent.includes('稻荷站 -> 宇治站') || textContent.includes('稲荷駅 -> 宇治駅')) {
+                            searchLocation = 'JR稻荷站'; // Or JR Inari Station
+                        } else if (textContent.includes('宇治站') && textContent.includes('京都車站')) {
+                           searchLocation = 'JR宇治站';
+                        } else if (textContent.includes('唐吉軻德') || textContent.includes('Don Quijote')) {
+                           searchLocation = '唐吉訶德 京都Avanti店';
+                        } else if (textContent.includes('回民宿') || textContent.includes('宿へ')) {
+                            if (day.day <= 3) {
+                                searchLocation = '7-29 Fukuine Goshonouchicho, Higashiyama Ward, Kyoto, 605-0987';
+                            } else if (day.day == 4) {
+                                searchLocation = 'Kintetsunara-Ekimae, 29-1 Kamisanjocho, Nara, 630-8228';
+                            } else {
+                                searchLocation = '1-chōme-1-4 Tengachayakita, Nishinari Ward, Osaka';
+                            }
+                        } else if (textContent.includes('APA Hotel') || textContent.includes('APAホテル')) {
+                           searchLocation = 'Kintetsunara-Ekimae, 29-1 Kamisanjocho, Nara, 630-8228'; 
+                        } else if (textContent.includes('志津香') || textContent.includes('Shizuka')) {
+                           searchLocation = '志津香 公園店';
+                        } else if (textContent.includes('Maguro Koya') || textContent.includes('まぐろ小屋')) {
+                           searchLocation = 'Maguro Koya Nara';
+                        } else if (textContent.includes('彩之宿202') || textContent.includes('彩の宿202')) {
+                           searchLocation = '1-chōme-1-4 Tengachayakita, Nishinari Ward, Osaka';
+                        } else if (textContent.includes('EDION Namba') || textContent.includes('エディオン なんば')) {
+                           searchLocation = 'EDION Namba Main Store';
+                        } else if (textContent.includes('Tokisushi') || textContent.includes('ときすし')) {
+                           searchLocation = 'Tokisushi Honten';
+                        }
+
+                        const mapQuery = encodeURIComponent(searchLocation + ", " + cityContext); 
                         const mapUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
                         
                         const showNav = requiresNavigation(locationName, textContent);
@@ -631,8 +1397,11 @@
                         const isAccommodation = locationName.includes('民宿') || locationName.includes('飯店') || locationName.includes('ホテル');
                         const borderColor = isAccommodation ? 'border-red-400' : 'border-gray-100';
 
-                        const costKey = `day_${dayIndex}_item_${index}`;
-                        const savedCost = costData[costKey];
+                        // 計算該項目總消費
+                        const itemTotal = calculateItemTotal(dayIndex, index);
+
+                        // 判斷是否為巴士項目以顯示時刻表按鈕 (特定 Day 2 項目)
+                        const showTimetable = (dayIndex === 2 && (textContent.includes('202') || textContent.includes('207')));
 
                         return `
                             <div class="bg-white p-3 rounded-xl shadow-lg border ${borderColor} flex flex-col justify-start transition-shadow hover:shadow-xl">
@@ -645,14 +1414,22 @@
                                 <!-- 按鈕區域 (修正：花費在左，導航在右，整體靠右) -->
                                 <div class="flex flex-wrap items-center gap-2 mt-2 w-full justify-end">
                                     <!-- 顯示花費金額 -->
-                                    ${savedCost ? `
+                                    ${itemTotal > 0 ? `
                                         <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-100 mr-auto">
-                                            ${costDisplayPrefix}${savedCost}
+                                            ${costDisplayPrefix}${itemTotal.toLocaleString()}
                                         </span>
                                     ` : ''}
 
+                                    <!-- 時刻表按鈕 -->
+                                    ${showTimetable ? `
+                                    <button onclick="openBusModal()" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        ${timetableText}
+                                    </button>
+                                    ` : ''}
+
                                     <!-- 花費按鈕 (現在在左邊) -->
-                                    <button onclick="openCostModal(${dayIndex}, ${index})" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
+                                    <button onclick="openCostModalForItinerary(${dayIndex}, ${index})" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         ${costText}
                                     </button>
@@ -671,12 +1448,12 @@
                 </div>
             `;
             
-            // 更新今日總花費
+            // 更新今日總消費
             const dailyTotal = calculateDailyTotal(dayIndex);
             dailyTotalLabel.textContent = i18n[lang].total_cost_label;
             dailyTotalElement.textContent = dailyTotal.toLocaleString();
 
-            // 更新整趟旅程總花費
+            // 更新整趟旅程總消費
             const tripTotal = calculateTripTotal();
             tripTotalLabel.textContent = i18n[lang].trip_total_label;
             tripTotalElement.textContent = tripTotal.toLocaleString();
@@ -702,6 +1479,12 @@
             });
 
             document.getElementById(sectionId).classList.remove('hidden');
+
+            // If entering Expenses tab, refresh list
+            if (sectionId === 'expenses') {
+                renderCustomExpenses();
+                renderItineraryExpensesInTab();
+            }
 
             document.querySelectorAll('.day-btn').forEach(btn => {
                 btn.classList.remove('active');
