@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>料件管理系統</title>
+    
+    <!-- 1. 載入 Tailwind CSS (樣式工具) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 載入 Babel (讓瀏覽器看得懂 React 程式碼) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 設定 Tailwind 樣式，避免手機版高度問題 -->
+    <style>
+        body, html { height: 100%; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- 3. 載入我們的主程式 App.js
+         注意：這裡加上 type="text/babel" 和 data-type="module" 
+         這是為了讓瀏覽器能直接執行 React 檔案的關鍵設定 -->
+    <script type="text/babel" data-type="module" src="./App.js"></script>
+</body>
+</html>
