@@ -164,10 +164,10 @@
                 </div>
             </div>
 
-            <!-- 2. 天氣 -->
+            <!-- 2. 天氣 (Weather - Enhanced Version) -->
             <div id="weather" class="section hidden">
                 <div class="flex justify-between items-center border-b pb-2 mb-3">
-                    <h2 id="weather-section-title" class="text-xl font-semibold text-gray-800">京都・大阪・奈良 天氣預報</h2>
+                    <h2 id="weather-section-title" class="text-xl font-semibold text-gray-800">京都・大阪・奈良・長濱</h2>
                     <button onclick="fetchWeather(true)" class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1 px-3 rounded-full transition-colors">
                         🔄 重新整理
                     </button>
@@ -182,7 +182,8 @@
                         </svg>
                         <span id="loading-text" class="text-gray-600 text-sm font-medium">正在查詢天氣資訊...</span>
                     </div>
-                    <div id="weather-output" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                    <!-- 修正為 grid-cols-2 (田字型)，手機版也保持兩欄以便一覽 -->
+                    <div id="weather-output" class="hidden grid grid-cols-2 gap-3"></div>
                      <div id="weather-error" class="hidden p-4 text-center text-red-600 bg-red-50 rounded-xl border border-red-100 text-sm">
                         天氣資訊暫時無法取得，請檢查網路連線。
                     </div>
@@ -715,10 +716,6 @@
 
         function extractLocationName(detail) {
             let cleanedDetail = detail.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}/gu, '').trim(); 
-            
-            // 新增：移除時間格式 (如 "07:10 ") 以避免干擾地名判斷
-            cleanedDetail = cleanedDetail.replace(/^\d{1,2}:\d{2}\s*/, '');
-
             // 移除常見前綴 (保留特定長地點)
             const prefixes = [
                 "早起：", "早起き：", "交通：", "搭乘：", "乗車：", "時間：", "下車：", "景點：", "観光：", "散步：", "散策：", "午餐/下午：", "昼食/午後：", "晚餐：", "夕食：", "回程：", "歸路：", "動漫巡禮 1：", "アニメ巡り 1：", "動漫巡禮 2：", "アニメ巡り 2：", "動漫巡禮 3：", "アニメ巡り 3：", "動漫巡禮：", "アニメ巡り：", "預約：", "予約：", "歸還：", "返却：", "點心：", "おやつ：", "購物：", "買い物：", "退房：", "チェックアウト：", "步行：", "徒歩：", "寄放行李/購物：", "荷物預け/買い物：", "上午：", "下午：", "午餐：", "晚餐：", "傍晚：", "晚上：", 
@@ -1314,11 +1311,10 @@
             const titleElement = document.getElementById('itinerary-title');
             const contentElement = document.getElementById('itinerary-content');
             
-            // Remove initial declarations
-            // const dailyTotalElement = document.getElementById('daily-total-amount'); 
-            // const dailyTotalLabel = document.getElementById('label-daily-total');
-            // const tripTotalElement = document.getElementById('trip-total-amount');
-            // const tripTotalLabel = document.getElementById('label-trip-total');
+            const dailyTotalElement = document.getElementById('daily-total-amount');
+            const dailyTotalLabel = document.getElementById('label-daily-total');
+            const tripTotalElement = document.getElementById('trip-total-amount');
+            const tripTotalLabel = document.getElementById('label-trip-total');
 
             const lang = currentLang;
             const navText = i18n[lang].nav_button;
@@ -1415,10 +1411,8 @@
                         const isAccommodation = locationName.includes('民宿') || locationName.includes('飯店') || locationName.includes('ホテル');
                         const borderColor = isAccommodation ? 'border-red-400' : 'border-gray-100';
 
-                        // 計算該項目總消費
                         const itemTotal = calculateItemTotal(dayIndex, index);
 
-                        // 判斷是否為巴士項目以顯示時刻表按鈕 (特定 Day 2 項目)
                         const showTimetable = (dayIndex === 2 && (textContent.includes('202') || textContent.includes('207')));
 
                         return `
@@ -1462,12 +1456,6 @@
                 </div>
             `;
             
-            // Declare only ONCE after HTML is ready
-            const dailyTotalElement = document.getElementById('daily-total-amount');
-            const dailyTotalLabel = document.getElementById('label-daily-total');
-            const tripTotalElement = document.getElementById('trip-total-amount');
-            const tripTotalLabel = document.getElementById('label-trip-total');
-
             const dailyTotal = calculateDailyTotal(dayIndex);
             if (dailyTotalLabel) dailyTotalLabel.textContent = i18n[lang].total_cost_label;
             if (dailyTotalElement) dailyTotalElement.textContent = dailyTotal.toLocaleString();
@@ -1558,10 +1546,12 @@
             // Kyoto: 35.0116, 135.7681
             // Osaka: 34.6937, 135.5023
             // Nara: 34.6851, 135.8048
+            // Nagahama: 35.3778, 136.2709
             const cities = [
                 { name: lang === 'zh' ? "京都" : "Kyoto", lat: 35.0116, lon: 135.7681 },
                 { name: lang === 'zh' ? "大阪" : "Osaka", lat: 34.6937, lon: 135.5023 },
-                { name: lang === 'zh' ? "奈良" : "Nara", lat: 34.6851, lon: 135.8048 }
+                { name: lang === 'zh' ? "奈良" : "Nara", lat: 34.6851, lon: 135.8048 },
+                { name: lang === 'zh' ? "長濱" : "Nagahama", lat: 35.3778, lon: 136.2709 }
             ];
 
             try {
@@ -1585,7 +1575,8 @@
                 const fallbackData = [
                     { city: lang === 'zh' ? "京都 (範例)" : "Kyoto (Demo)", temp: "22°C", condition: lang === 'zh' ? "多雲" : "Cloudy", type: "cloudy", daily: { precipitation_probability_max: [10, 20], temperature_2m_min: [15, 16], temperature_2m_max: [23, 24], weather_code: [2, 3] } },
                     { city: lang === 'zh' ? "大阪 (範例)" : "Osaka (Demo)", temp: "24°C", condition: lang === 'zh' ? "晴朗" : "Sunny", type: "sunny", daily: { precipitation_probability_max: [0, 10], temperature_2m_min: [17, 18], temperature_2m_max: [25, 26], weather_code: [0, 1] } },
-                    { city: lang === 'zh' ? "奈良 (範例)" : "Nara (Demo)", temp: "23°C", condition: lang === 'zh' ? "晴時多雲" : "Partly Cloudy", type: "cloudy", daily: { precipitation_probability_max: [10, 10], temperature_2m_min: [14, 15], temperature_2m_max: [22, 23], weather_code: [1, 2] } }
+                    { city: lang === 'zh' ? "奈良 (範例)" : "Nara (Demo)", temp: "23°C", condition: lang === 'zh' ? "晴時多雲" : "Partly Cloudy", type: "cloudy", daily: { precipitation_probability_max: [10, 10], temperature_2m_min: [14, 15], temperature_2m_max: [22, 23], weather_code: [1, 2] } },
+                    { city: lang === 'zh' ? "長濱 (範例)" : "Nagahama (Demo)", temp: "18°C", condition: lang === 'zh' ? "陰天" : "Overcast", type: "cloudy", daily: { precipitation_probability_max: [30, 40], temperature_2m_min: [10, 12], temperature_2m_max: [18, 19], weather_code: [3, 3] } }
                 ];
                 // Note: Fallback structure adapted to match renderWeatherCards logic is simplified here for brevity, 
                 // but real logic handles the structure difference or we mock it correctly.
