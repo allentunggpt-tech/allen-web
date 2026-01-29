@@ -345,7 +345,7 @@
         </div>
     </div>
 
-    <!-- Bus Modal -->
+    <!-- Bus Modal (更新時間配合 14:20) -->
     <div id="bus-timetable-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-50 flex items-center justify-center transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-sm transform transition-all scale-100 modal-enter-active">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -366,26 +366,134 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         <tr>
-                            <td class="p-2 font-bold">06</td>
+                            <td class="p-2 font-bold">13</td>
                             <td class="p-2">
-                                <span class="bg-green-100 text-green-800 px-1 rounded">05</span>, 
-                                <span class="bg-green-100 text-green-800 px-1 rounded">18</span>, 
-                                31, 46, 49
+                                04, 15, 26, 37, 48, 59
                             </td>
                         </tr>
                         <tr>
-                            <td class="p-2 font-bold">07</td>
-                            <td class="p-2">02, 11, 21, 28, 35, 43, 52</td>
+                            <td class="p-2 font-bold">14</td>
+                            <td class="p-2">
+                                08, <span class="bg-green-100 text-green-800 px-1 rounded">17</span>, 
+                                <span class="bg-green-100 text-green-800 px-1 rounded">26</span>, 
+                                36, 47, 58
+                            </td>
                         </tr>
                         <tr>
-                            <td class="p-2 font-bold">08</td>
-                            <td class="p-2">02, 12, 21, 29, 37, 47, 57</td>
+                            <td class="p-2 font-bold">15</td>
+                            <td class="p-2">09, 20, 31, 42, 53</td>
                         </tr>
                     </tbody>
                 </table>
-                <p class="text-xs text-red-500 mt-2">* 207號首班約06:05，202號約06:18。建議提早候車。</p>
+                <p class="text-xs text-red-500 mt-2">* 207號班次較多，與202號穿插行駛。時間僅供參考。</p>
             </div>
             <button onclick="closeBusModal()" class="w-full mt-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                關閉
+            </button>
+        </div>
+    </div>
+    
+    <!-- HARUKA Modal (新增) -->
+    <div id="haruka-timetable-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-sm transform transition-all scale-100 modal-enter-active">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-lg font-bold text-indigo-700">🚆 HARUKA 時刻表 (參考)</h3>
+                <button onclick="closeHarukaModal()" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div class="text-sm text-gray-600 mb-3">
+                <p class="font-bold">路線：HARUKA 特急 (往京都)</p>
+                <p>上車：關西機場 / 下車：京都車站</p>
+            </div>
+            <div class="overflow-y-auto max-h-60">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="p-2">時</th>
+                            <th class="p-2">發車時刻</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr>
+                            <td class="p-2 font-bold">17</td>
+                            <td class="p-2">
+                                16, 44
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-bold">18</td>
+                            <td class="p-2">
+                                16, <span class="bg-green-100 text-green-800 px-1 rounded">44</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-bold">19</td>
+                            <td class="p-2">
+                                16, 44
+                            </td>
+                        </tr>
+                         <tr>
+                            <td class="p-2 font-bold">20</td>
+                            <td class="p-2">
+                                16, 44
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-red-500 mt-2">* 班距約30分鐘，車程約80分鐘。18:44 為預估班次。</p>
+            </div>
+            <button onclick="closeHarukaModal()" class="w-full mt-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-colors">
+                關閉
+            </button>
+        </div>
+    </div>
+
+    <!-- Nankai Timetable Modal (新增) -->
+    <div id="nankai-timetable-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden z-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-sm transform transition-all scale-100 modal-enter-active">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-lg font-bold text-blue-800">✈️ 南海電鐵時刻表 (參考)</h3>
+                <button onclick="closeNankaiModal()" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div class="text-sm text-gray-600 mb-3">
+                <p class="font-bold">路線：空港急行 / Rapi:t (往關西機場)</p>
+                <p>上車：新今宮 / 天下茶屋</p>
+            </div>
+            <div class="overflow-y-auto max-h-60">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-blue-50 text-blue-900">
+                        <tr>
+                            <th class="p-2">時</th>
+                            <th class="p-2">發車 (R=特急 / 無印=急行)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-blue-50">
+                        <tr>
+                            <td class="p-2 font-bold">11</td>
+                            <td class="p-2">
+                                <span class="bg-blue-600 text-white px-1 rounded">02(R)</span>, 
+                                11, 26, 32(R), 41, 56
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-bold">12</td>
+                            <td class="p-2">
+                                02(R), 
+                                11, 
+                                26, 
+                                32(R), 41, 56
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 font-bold">13</td>
+                            <td class="p-2">
+                                02(R), 11, 26, 32(R)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-gray-500 mt-2">* 建議搭乘 11:02 特急 Rapi:t。<br>Rapi:t 全車指定席(需劃位)。</p>
+            </div>
+            <button onclick="closeNankaiModal()" class="w-full mt-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg font-bold shadow-md transition-colors">
                 關閉
             </button>
         </div>
@@ -493,6 +601,8 @@
                 btn_add: '新增',
                 btn_trans: '文 A/あ',
                 btn_timetable: '時刻表',
+                btn_haruka_timetable: 'HARUKA時刻表',
+                btn_nankai_timetable: '南海時刻表',
                 rate_section_title: '即時匯率換算',
                 rate_source: '參考來源：台灣銀行 (預估)',
                 btn_update_rate: '更新匯率',
@@ -554,6 +664,8 @@
                 btn_add: '追加',
                 btn_trans: '翻訳',
                 btn_timetable: '時刻表',
+                btn_haruka_timetable: 'HARUKA時刻表',
+                btn_nankai_timetable: '南海時刻表',
                 rate_section_title: 'リアルタイム為替レート',
                 rate_source: '情報源：台湾銀行 (推定)',
                 btn_update_rate: 'レート更新',
@@ -567,12 +679,13 @@
         const itineraryData = [
             null, 
             { day: 1, location: "京都：抵達與安頓", theme: "歡迎來到古都！交通與入住", location_ja: "京都：到着と宿泊", theme_ja: "古都へようこそ！交通とチェックイン", details: [
-                {zh: "關西機場抵達", ja: "關西国際空港に到着"}, 
-                {zh: "搭乘 HARUKA 前往京都車站", ja: "HARUKAで京都駅へ移動"},
-                {zh: "搭乘京都奈良線到東福寺站", ja: "京都奈良線で東福寺駅へ"}, 
-                {zh: "Oyado tofukuji民宿 (住宿地址: 7-29 Fukuine Goshonouchicho, Higashiyama Ward, Kyoto, 605-0987日本)", ja: "お宿 東福寺 (宿泊先)"},
-                {zh: "閒逛：東福寺周邊適應環境", ja: "散策：東福寺周辺で環境に慣れる"},
-                {zh: "晚餐：京都車站周邊", ja: "夕食：京都駅周辺"}
+                {zh: "17:05 關西機場抵達 (降落)", ja: "17:05 関西国際空港に到着"}, 
+                {zh: "18:15 完成入境手續，前往 JR 改札口 (預留時間)", ja: "18:15 入国審査完了、JR改札へ"},
+                {zh: "18:44 搭乘 HARUKA 特急前往京都車站 (此為預估班次)", ja: "18:44 HARUKA特急で京都駅へ (予定)"},
+                {zh: "20:05 抵達京都車站，站內轉乘 JR 奈良線 (8-10月台)", ja: "20:05 京都駅到着、JR奈良線へ乗り換え"}, 
+                {zh: "20:20 抵達 JR 東福寺站，步行前往民宿", ja: "20:20 JR東福寺駅到着、宿へ徒歩移動"}, 
+                {zh: "20:35 Oyado tofukuji民宿 Check-in (住宿地址: 7-29 Fukuine Goshonouchicho, Higashiyama Ward, Kyoto, 605-0987日本)", ja: "20:35 お宿 東福寺 チェックイン"},
+                {zh: "21:00 晚餐：京都車站拉麵小路 (營業至22:00) 或附近超商", ja: "21:00 夕食：京都拉麺小路 (22時まで) またはコンビニ"}
             ] },
             { day: 2, location: "滋賀長濱 & 京都", theme: "琵琶湖玩雪與清水寺黃昏", location_ja: "滋賀長浜 & 京都", theme_ja: "琵琶湖の雪遊びと清水寺の夕暮れ", details: [
                 {zh: "07:10 JR 東福寺站 -> 京都站 (刷 Suica)", ja: "07:10 JR 東福寺駅 -> 京都駅 (Suica使用)"},
@@ -668,11 +781,14 @@
                 {zh: "回程：步行回民宿", ja: "帰路：徒歩で宿へ戻る"}
             ] },
             { day: 9, location: "大阪：返程", theme: "最後採買與前往機場", location_ja: "大阪：帰路", theme_ja: "最後の買い物と空港へ", details: [
-                {zh: "上午：整理行李，Check-out", ja: "午前：荷造り、チェックアウト"},
-                {zh: "前往：南海新今宮站 (離民宿最近的南海車站)", ja: "移動：南海新今宮駅 (宿から最寄りの南海駅)"},
-                {zh: "搭乘：南海電鐵 (空港急行/Rapi:t) 前往關西機場 (事先購票/刷 Suica)", ja: "乗車：南海電鉄 (空港急行/ラピート) で関西空港へ (事前購入/Suica使用)"},
-                {zh: "午餐：關西機場內用餐", ja: "昼食：関西空港内で食事"},
-                {zh: "辦理登機手續，搭機返回", ja: "チェックイン手続き後、帰国"}
+                {zh: "10:00 民宿 Check-out (準時退房)", ja: "10:00 民宿チェックアウト (時間厳守)"},
+                {zh: "10:15 步行前往南海新今宮站 (準備搭車)", ja: "10:15 徒歩で南海新今宮駅へ (乗車準備)"},
+                {zh: "10:30 車站周邊稍作休息或於站內便利商店補給", ja: "10:30 駅周辺で休憩またはコンビニ"},
+                {zh: "11:02 搭乘南海電鐵特急 Rapi:t 前往關西機場 (已買車票)", ja: "11:02 南海電鉄特急ラピートで関西空港へ (チケット購入済み)"},
+                {zh: "11:40 抵達關西機場站，前往 Aeroplaza 搭乘 T2 接駁車", ja: "11:40 関西空港駅到着、エアロプラザからT2行きバス乗車"},
+                {zh: "12:00 抵達第二航廈 (T2) 辦理登機手續", ja: "12:00 第2ターミナル (T2) 到着、チェックイン手続き"},
+                {zh: "12:30 T2 免稅店採買 & 午餐", ja: "12:30 T2 免税店ショッピング & ランチ"},
+                {zh: "15:25 班機起飛 (快樂賦歸)", ja: "15:25 飛行機離陸 (帰国)"}
             ] }
         ];
 
@@ -717,6 +833,9 @@
         function extractLocationName(detail) {
             let cleanedDetail = detail.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}/gu, '').trim(); 
             // 移除常見前綴 (保留特定長地點)
+            // 新增：移除開頭的時間格式 (例如 "17:05 ") 以避免影響地圖搜尋
+            cleanedDetail = cleanedDetail.replace(/^\d{2}:\d{2}\s+/, '');
+            
             const prefixes = [
                 "早起：", "早起き：", "交通：", "搭乘：", "乗車：", "時間：", "下車：", "景點：", "観光：", "散步：", "散策：", "午餐/下午：", "昼食/午後：", "晚餐：", "夕食：", "回程：", "歸路：", "動漫巡禮 1：", "アニメ巡り 1：", "動漫巡禮 2：", "アニメ巡り 2：", "動漫巡禮 3：", "アニメ巡り 3：", "動漫巡禮：", "アニメ巡り：", "預約：", "予約：", "歸還：", "返却：", "點心：", "おやつ：", "購物：", "買い物：", "退房：", "チェックアウト：", "步行：", "徒歩：", "寄放行李/購物：", "荷物預け/買い物：", "上午：", "下午：", "午餐：", "晚餐：", "傍晚：", "晚上：", 
                 "必玩：", "全日：", "備註：", "例如：", "必備：", "必去：", "體驗：", "体験：", "移動：", "前往：", "轉乘：", "乗換：",
@@ -788,6 +907,16 @@
         function updateStaticTexts(lang) {
             const texts = i18n[lang];
 
+            // 1. 抓取當前狀態 (避免切換語言時跳回第一頁)
+            let activeDayIndex = null;
+            const currentActiveDayBtn = document.querySelector('.day-btn.active');
+            if (currentActiveDayBtn) {
+                activeDayIndex = parseInt(currentActiveDayBtn.dataset.day);
+            }
+            // 抓取當前分頁 (如果不是在行程頁)
+            const currentActiveTabBtn = document.querySelector('.tab-btn.active');
+            const currentSectionId = currentActiveTabBtn ? currentActiveTabBtn.dataset.section : 'daily-itinerary-detail';
+
             document.getElementById('app-title').innerHTML = texts.app_title;
             document.getElementById('app-subtitle').textContent = texts.app_subtitle;
             document.getElementById('lang-toggle').textContent = lang === 'zh' ? '日文' : '中文';
@@ -852,19 +981,17 @@
             renderItineraryExpensesInTab(); 
             renderMyChecklist(); // Render user custom checklist items
             renderCommonPhrases(lang); // Render translations
-
-            const currentActiveDay = document.querySelector('.day-btn.active');
-            if (currentActiveDay) {
-                showDay(parseInt(currentActiveDay.dataset.day));
-            } else {
-                const currentSectionId = document.querySelector('.tab-btn.active')?.dataset.section || 'daily-itinerary-detail';
-                showSection(currentSectionId);
-            }
             
+            // 2. 重新渲染按鈕
             renderDayButtons();
-            
-            if (currentActiveDay) {
-                document.querySelector(`.day-btn[data-day="${currentActiveDay.dataset.day}"]`)?.classList.add('active');
+
+            // 3. 恢復狀態
+            if (activeDayIndex) {
+                showDay(activeDayIndex);
+            } else if (currentSectionId && currentSectionId !== 'daily-itinerary-detail') {
+                showSection(currentSectionId);
+            } else {
+                showDay(1); // Default Fallback
             }
         }
         
@@ -1117,6 +1244,24 @@
             document.getElementById('bus-timetable-modal').classList.add('hidden');
         }
 
+        // --- HARUKA 時刻表功能 (新增) ---
+        function openHarukaModal() {
+            document.getElementById('haruka-timetable-modal').classList.remove('hidden');
+        }
+
+        function closeHarukaModal() {
+            document.getElementById('haruka-timetable-modal').classList.add('hidden');
+        }
+
+        // --- 南海時刻表功能 (新增) ---
+        function openNankaiModal() {
+            document.getElementById('nankai-timetable-modal').classList.remove('hidden');
+        }
+
+        function closeNankaiModal() {
+            document.getElementById('nankai-timetable-modal').classList.add('hidden');
+        }
+
         // --- 新增：自定義消費功能 ---
         function addCustomExpense() {
             const categorySelect = document.getElementById('expense-category');
@@ -1308,6 +1453,13 @@
         // 7. 顯示特定一天的行程細節 (含按鈕互換與靠右)
         function showDay(dayIndex) {
             const day = itineraryData[dayIndex];
+            
+            // 安全性檢查
+            if (!day) {
+                console.error('Day data not found for index:', dayIndex);
+                return;
+            }
+
             const titleElement = document.getElementById('itinerary-title');
             const contentElement = document.getElementById('itinerary-content');
             
@@ -1320,6 +1472,8 @@
             const navText = i18n[lang].nav_button;
             const costText = i18n[lang].cost_button;
             const timetableText = i18n[lang].btn_timetable;
+            const harukaText = i18n[lang].btn_haruka_timetable;
+            const nankaiText = i18n[lang].btn_nankai_timetable;
             const costDisplayPrefix = i18n[lang].cost_display_prefix;
 
             
@@ -1414,6 +1568,8 @@
                         const itemTotal = calculateItemTotal(dayIndex, index);
 
                         const showTimetable = (dayIndex === 2 && (textContent.includes('202') || textContent.includes('207')));
+                        const showHarukaTimetable = (dayIndex === 1 && textContent.includes('HARUKA'));
+                        const showNankaiTimetable = (dayIndex === 9 && (textContent.includes('南海') || textContent.includes('Nankai')));
 
                         return `
                             <div class="bg-white p-3 rounded-xl shadow-lg border ${borderColor} flex flex-col justify-start transition-shadow hover:shadow-xl">
@@ -1435,6 +1591,20 @@
                                     <button onclick="openBusModal()" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         ${timetableText}
+                                    </button>
+                                    ` : ''}
+                                    
+                                    ${showHarukaTimetable ? `
+                                    <button onclick="openHarukaModal()" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        ${harukaText}
+                                    </button>
+                                    ` : ''}
+
+                                    ${showNankaiTimetable ? `
+                                    <button onclick="openNankaiModal()" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1.5 px-3 rounded-full flex items-center shadow-sm transform active:scale-95 transition-transform whitespace-nowrap">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        ${nankaiText}
                                     </button>
                                     ` : ''}
 
@@ -1578,12 +1748,10 @@
                     { city: lang === 'zh' ? "奈良 (範例)" : "Nara (Demo)", temp: "23°C", condition: lang === 'zh' ? "晴時多雲" : "Partly Cloudy", type: "cloudy", daily: { precipitation_probability_max: [10, 10], temperature_2m_min: [14, 15], temperature_2m_max: [22, 23], weather_code: [1, 2] } },
                     { city: lang === 'zh' ? "長濱 (範例)" : "Nagahama (Demo)", temp: "18°C", condition: lang === 'zh' ? "陰天" : "Overcast", type: "cloudy", daily: { precipitation_probability_max: [30, 40], temperature_2m_min: [10, 12], temperature_2m_max: [18, 19], weather_code: [3, 3] } }
                 ];
-                // Note: Fallback structure adapted to match renderWeatherCards logic is simplified here for brevity, 
-                // but real logic handles the structure difference or we mock it correctly.
-                // Re-mapping fallback to match the render loop expectation:
+                // Note: Fallback structure adapted to match renderWeatherCards logic
                 const formattedFallback = fallbackData.map(d => ({
                     city: d.city,
-                    current: { weather_code: 1, temperature_2m: parseInt(d.temp) },
+                    current: { weather_code: d.daily.weather_code[0], temperature_2m: parseInt(d.temp) },
                     daily: d.daily
                 }));
                 
@@ -1604,13 +1772,20 @@
             return lang === 'zh' ? '雷雨' : 'Thunderstorm';
         }
 
-        // Helper: Convert WMO code to type for icon
-        function getWeatherType(code) {
-            if (code <= 1) return 'sunny';
-            if (code <= 3) return 'cloudy';
-            if (code <= 67 || (code >= 80 && code <= 82)) return 'rain';
-            if (code >= 71) return 'snow';
-            return 'default';
+        // Helper: Convert WMO code to Icon
+        function getWeatherIcon(code) {
+            // WMO Weather interpretation codes (WW)
+            // 修正順序與邏輯：確保雷雨(95)不會被誤判為雪
+            if (code >= 95) return weatherIcons.rain; // Thunderstorm
+            if (code <= 1) return weatherIcons.sunny;
+            if (code <= 3) return weatherIcons.cloudy;
+            if (code <= 48) return weatherIcons.cloudy; // Fog
+            if (code <= 67) return weatherIcons.rain;
+            if (code >= 71 && code <= 77) return weatherIcons.snow;
+            if (code >= 80 && code <= 82) return weatherIcons.rain; // Rain Showers
+            if (code >= 85) return weatherIcons.snow; // Snow showers
+            
+            return weatherIcons.default;
         }
 
         function renderWeatherCards(data) {
@@ -1673,19 +1848,6 @@
 
             loadingDiv.classList.add('hidden');
             outputDiv.classList.remove('hidden');
-        }
-
-        // Helper: Convert WMO code to Icon
-        function getWeatherIcon(code) {
-            // WMO Weather interpretation codes (WW)
-            if (code <= 1) return weatherIcons.sunny;
-            if (code <= 3) return weatherIcons.cloudy;
-            if (code <= 48) return weatherIcons.cloudy; // Fog
-            if (code <= 67 || (code >= 80 && code <= 82)) return weatherIcons.rain;
-            if (code >= 71 && code <= 77) return weatherIcons.snow;
-            if (code >= 85) return weatherIcons.snow;
-            if (code >= 95) return weatherIcons.rain; // Thunderstorm
-            return weatherIcons.default;
         }
 
         // --- 匯率功能 (Exchange Rate) ---
@@ -1760,9 +1922,8 @@
 
         // --- 初始化 (Initialization) ---
         window.onload = function() {
-            renderDayButtons(); 
-            updateStaticTexts(currentLang); // 渲染所有靜態文字和清單
-            showDay(1); // 預設顯示第一天行程
+            // 已簡化：只需要呼叫 updateStaticTexts，它內部會負責渲染按鈕與頁面
+            updateStaticTexts(currentLang); 
         };
     </script>
 </body>
