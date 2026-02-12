@@ -30,7 +30,7 @@
 
         // --- SVG 圖示組件 ---
         const Icons = {
-            Map: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>,
+            Map: ({size = 20}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>,
             Coffee: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>,
             ShoppingBag: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>,
             Train: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><path d="M2 8h20"></path></svg>,
@@ -41,16 +41,18 @@
             AlertCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>,
             Trash2: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
             Edit2: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>,
-            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            X: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+            PieChart: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
         };
 
+        // --- 為每個分類加上對應顏色，供圓餅圖使用 ---
         const CATEGORIES = [
-            { id: 'food', name: '餐飲', icon: <Icons.Coffee /> },
-            { id: 'transport', name: '交通', icon: <Icons.Train /> },
-            { id: 'shopping', name: '購物', icon: <Icons.ShoppingBag /> },
-            { id: 'entertainment', name: '娛樂', icon: <Icons.Music /> },
-            { id: 'accommodation', name: '住宿', icon: <Icons.Map /> },
-            { id: 'other', name: '其他', icon: <Icons.MoreHorizontal /> },
+            { id: 'food', name: '餐飲', icon: <Icons.Coffee />, color: '#F59E0B' }, // 琥珀黃
+            { id: 'transport', name: '交通', icon: <Icons.Train />, color: '#3B82F6' }, // 藍色
+            { id: 'shopping', name: '購物', icon: <Icons.ShoppingBag />, color: '#EC4899' }, // 粉紅
+            { id: 'entertainment', name: '娛樂', icon: <Icons.Music />, color: '#8B5CF6' }, // 紫色
+            { id: 'accommodation', name: '住宿', icon: <Icons.Map size={18} />, color: '#10B981' }, // 翠綠
+            { id: 'other', name: '其他', icon: <Icons.MoreHorizontal />, color: '#6B7280' }, // 灰色
         ];
 
         const TOTAL_DAYS = 5;
@@ -60,6 +62,7 @@
             const [currentDay, setCurrentDay] = useState(1);
             const [formData, setFormData] = useState({ category: 'food', item: '', amount: '' });
             const [editingId, setEditingId] = useState(null); // 新增：追蹤正在編輯的項目
+            const [itemToDelete, setItemToDelete] = useState(null); // 新增：取代原生 confirm 的刪除狀態
             const [status, setStatus] = useState({ type: '', msg: '' });
             const [isLoading, setIsLoading] = useState(false);
             const [isFetching, setIsFetching] = useState(false);
@@ -161,10 +164,10 @@
                 setEditingId(null);
             };
 
-            const handleDelete = async (id) => {
-                if(!confirm('確定要從雲端刪除這筆資料嗎？此動作無法復原。')) return;
-
-                setIsLoading(true); // 顯示讀取中，因為刪除可能會頓一下
+            const executeDelete = async () => {
+                const id = itemToDelete;
+                setItemToDelete(null); // 關閉彈窗
+                setIsLoading(true); // 顯示讀取中
                 
                 try {
                     // 前端先刪除
@@ -191,14 +194,74 @@
             const getTripTotal = () => expenses.reduce((sum, e) => sum + e.amount, 0);
             const formatMoney = (amount) => new Intl.NumberFormat('zh-TW').format(amount);
 
+            // --- 產生分析圓餅圖的方法 ---
+            const renderAnalysis = () => {
+                const total = getTripTotal();
+                if (total === 0) {
+                    return (
+                        <div className="text-center py-16 text-gray-400 bg-white rounded-xl shadow-sm border border-gray-100">
+                            <Icons.PieChart />
+                            <p className="mt-2">尚無消費紀錄可供分析</p>
+                        </div>
+                    );
+                }
+
+                // 1. 計算各類別總額與百分比
+                const catData = CATEGORIES.map(cat => {
+                    const amount = expenses.filter(e => e.category === cat.id).reduce((sum, e) => sum + e.amount, 0);
+                    return { ...cat, amount, percent: amount / total };
+                }).filter(c => c.amount > 0).sort((a, b) => b.amount - a.amount); // 照金額大到小排序
+
+                // 2. 生成 CSS conic-gradient (圓錐漸層) 的參數字串
+                let cumulativePercent = 0;
+                const gradientStops = catData.map(c => {
+                    const start = cumulativePercent;
+                    cumulativePercent += c.percent * 100;
+                    return `${c.color} ${start}% ${cumulativePercent}%`;
+                }).join(', ');
+
+                return (
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
+                        <h2 className="text-lg font-bold text-gray-800 mb-6 border-b pb-2 w-full text-center">旅途總消費結構</h2>
+                        
+                        {/* 甜甜圈圓餅圖 */}
+                        <div className="relative w-48 h-48 rounded-full mb-8 shadow-md" style={{ background: `conic-gradient(${gradientStops})` }}>
+                            {/* 中間的白色圓形，製造甜甜圈效果 */}
+                            <div className="absolute inset-0 m-auto w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                                <span className="text-xs text-gray-500 mb-1">總支出</span>
+                                <span className="text-xl font-bold text-gray-800">${formatMoney(total)}</span>
+                            </div>
+                        </div>
+
+                        {/* 圖例與明細列表 */}
+                        <div className="w-full space-y-3">
+                            {catData.map(c => (
+                                <div key={c.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3.5 h-3.5 rounded-full shadow-sm" style={{ backgroundColor: c.color }}></div>
+                                        <span className="text-sm font-medium text-gray-700">{c.name}</span>
+                                    </div>
+                                    <div className="text-right flex items-center gap-3">
+                                        <span className="text-sm font-bold text-gray-800">${formatMoney(c.amount)}</span>
+                                        <span className="text-xs text-gray-500 w-10 inline-block text-right bg-gray-100 py-0.5 rounded">
+                                            {(c.percent * 100).toFixed(1)}%
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
             return (
                 <div className="min-h-screen bg-gray-50 text-gray-800 font-sans max-w-md mx-auto shadow-xl flex flex-col">
                     
                     {/* Header */}
                     <header className="bg-blue-600 text-white p-4 pt-8 sticky top-0 z-10 shadow-md">
                         <div className="flex justify-between items-center mb-4">
-                            <h1 className="text-xl font-bold flex items-center gap-2">
-                                <Icons.Map /> 曼谷自由行記帳
+                            <h1 className="text-2xl font-bold flex items-center gap-2">
+                                <Icons.Map size={28} /> 曼谷自由行記帳
                             </h1>
                             <div className="flex gap-2">
                                 <button 
@@ -217,8 +280,18 @@
                                 <p className="text-3xl font-bold">${formatMoney(getTripTotal())}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-blue-100 text-xs mb-1">第 {currentDay} 天</p>
-                                <p className="text-xl font-semibold">${formatMoney(getDayTotal(currentDay))}</p>
+                                {/* 根據是否在分析頁面顯示不同的標題 */}
+                                {currentDay === 'analysis' ? (
+                                    <>
+                                        <p className="text-blue-100 text-xs mb-1">分析模式</p>
+                                        <p className="text-xl font-semibold">總覽</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-blue-100 text-xs mb-1">第 {currentDay} 天</p>
+                                        <p className="text-xl font-semibold">${formatMoney(getDayTotal(currentDay))}</p>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -242,7 +315,7 @@
                                         onClick={() => setCurrentDay(day)}
                                         className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                                             currentDay === day 
-                                                ? 'bg-blue-600 text-white' 
+                                                ? 'bg-blue-600 text-white shadow-sm' 
                                                 : 'text-gray-500 hover:bg-gray-100'
                                         }`}
                                     >
@@ -250,127 +323,171 @@
                                     </button>
                                 );
                             })}
+                            
+                            {/* 新增：消費分析按鈕 */}
+                            <div className="w-px h-6 bg-gray-200 self-center mx-1"></div>
+                            <button
+                                onClick={() => setCurrentDay('analysis')}
+                                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                                    currentDay === 'analysis' 
+                                        ? 'bg-indigo-600 text-white shadow-sm' 
+                                        : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
+                                }`}
+                            >
+                                <Icons.PieChart /> 分析
+                            </button>
                         </div>
                     </div>
 
                     {/* 主要內容區 */}
                     <main className="flex-1 p-4 pb-32 overflow-y-auto">
                         
-                        {/* 輸入表單 */}
-                        <form onSubmit={handleSubmit} className={`p-4 rounded-xl shadow-sm border mb-6 transition-colors ${editingId ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-100'}`}>
-                            
-                            {/* 編輯模式提示 */}
-                            {editingId && (
-                                <div className="flex justify-between items-center mb-3 text-yellow-700 text-xs font-bold">
-                                    <span>正在編輯消費項目...</span>
-                                    <button type="button" onClick={handleCancelEdit} className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-yellow-200 hover:bg-gray-50">
-                                        <Icons.X /> 取消
+                        {/* 當 currentDay 為 'analysis' 時顯示圖表，否則顯示輸入表單與列表 */}
+                        {currentDay === 'analysis' ? (
+                            renderAnalysis()
+                        ) : (
+                            <>
+                                {/* 輸入表單 */}
+                                <form onSubmit={handleSubmit} className={`p-4 rounded-xl shadow-sm border mb-6 transition-colors ${editingId ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-100'}`}>
+                                    
+                                    {/* 編輯模式提示 */}
+                                    {editingId && (
+                                        <div className="flex justify-between items-center mb-3 text-yellow-700 text-xs font-bold">
+                                            <span>正在編輯消費項目...</span>
+                                            <button type="button" onClick={handleCancelEdit} className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-yellow-200 hover:bg-gray-50">
+                                                <Icons.X /> 取消
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="mb-3">
+                                        <label className="text-xs text-gray-500 mb-1 block">消費類別</label>
+                                        <div className="relative">
+                                            <select 
+                                                value={formData.category}
+                                                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg appearance-none text-sm outline-none font-medium"
+                                            >
+                                                {CATEGORIES.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 mb-3">
+                                        <div className="flex-[2]">
+                                            <label className="text-xs text-gray-500 mb-1 block">項目名稱</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="例如：午餐、門票"
+                                                value={formData.item}
+                                                onChange={(e) => setFormData({...formData, item: e.target.value})}
+                                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-xs text-gray-500 mb-1 block">金額</label>
+                                            <input 
+                                                type="number" 
+                                                inputMode="decimal"
+                                                placeholder="0"
+                                                value={formData.amount}
+                                                onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                                                className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none font-medium"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        disabled={isLoading}
+                                        className={`w-full py-3 rounded-lg font-medium text-white flex items-center justify-center gap-2 transition ${
+                                            isLoading ? 'bg-gray-400' : (editingId ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black')
+                                        }`}
+                                    >
+                                        {isLoading 
+                                            ? '處理中...' 
+                                            : (editingId ? <><Icons.Edit2 /> 確認修改</> : <><Icons.PlusCircle /> 新增消費</>)
+                                        }
+                                    </button>
+                                </form>
+
+                                {/* 列表 */}
+                                <div className="space-y-3">
+                                    {expenses
+                                        .filter(e => e.day === currentDay)
+                                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                                        .map((expense, idx) => {
+                                            const catInfo = CATEGORIES.find(c => c.id === expense.category);
+                                            const isEditingThis = expense.id === editingId;
+                                            return (
+                                                <div key={idx} className={`p-3 rounded-xl border shadow-sm flex items-center justify-between transition-colors ${isEditingThis ? 'bg-yellow-50 border-yellow-300' : 'bg-white border-gray-100'}`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                                            {catInfo?.icon}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-gray-800 text-sm">{expense.item}</p>
+                                                            <p className="text-xs text-gray-400">{catInfo?.name}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-gray-800 mr-2">${formatMoney(expense.amount)}</span>
+                                                        
+                                                        <button 
+                                                        onClick={() => handleEditClick(expense)} 
+                                                        className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded"
+                                                    >
+                                                        <Icons.Edit2 />
+                                                    </button>
+                                                    
+                                                    <button 
+                                                        onClick={() => setItemToDelete(expense.id)} 
+                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
+                                                    >
+                                                        <Icons.Trash2 />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                        })}
+                                    
+                                    {expenses.filter(e => e.day === currentDay).length === 0 && (
+                                    <div className="text-center py-8 text-gray-400">
+                                        <p className="text-sm">本日尚無紀錄</p>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {/* 自訂確認刪除彈窗 (取代原生的 confirm) */}
+                    {itemToDelete && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+                            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                                <h3 className="text-lg font-bold text-gray-800 mb-2">確認刪除？</h3>
+                                <p className="text-gray-600 mb-6 text-sm">確定要從雲端刪除這筆資料嗎？此動作無法復原。</p>
+                                <div className="flex gap-3 justify-end">
+                                    <button
+                                        onClick={() => setItemToDelete(null)}
+                                        className="px-4 py-2 rounded-lg text-gray-600 bg-gray-100 hover:bg-gray-200 transition text-sm font-medium"
+                                    >
+                                        取消
+                                    </button>
+                                    <button
+                                        onClick={executeDelete}
+                                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-medium"
+                                    >
+                                        確定刪除
                                     </button>
                                 </div>
-                            )}
-
-                            <div className="mb-3">
-                                <label className="text-xs text-gray-500 mb-1 block">消費類別</label>
-                                <div className="relative">
-                                    <select 
-                                        value={formData.category}
-                                        onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                        className="w-full p-2.5 bg-white border border-gray-200 rounded-lg appearance-none text-sm outline-none font-medium"
-                                    >
-                                        {CATEGORIES.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                                    </select>
-                                </div>
                             </div>
-
-                            <div className="flex gap-2 mb-3">
-                                <div className="flex-[2]">
-                                    <label className="text-xs text-gray-500 mb-1 block">項目名稱</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="例如：午餐、門票"
-                                        value={formData.item}
-                                        onChange={(e) => setFormData({...formData, item: e.target.value})}
-                                        className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="text-xs text-gray-500 mb-1 block">金額</label>
-                                    <input 
-                                        type="number" 
-                                        inputMode="decimal"
-                                        placeholder="0"
-                                        value={formData.amount}
-                                        onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                                        className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-sm outline-none font-medium"
-                                    />
-                                </div>
-                            </div>
-
-                            <button 
-                                type="submit" 
-                                disabled={isLoading}
-                                className={`w-full py-3 rounded-lg font-medium text-white flex items-center justify-center gap-2 transition ${
-                                    isLoading ? 'bg-gray-400' : (editingId ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-900 hover:bg-black')
-                                }`}
-                            >
-                                {isLoading 
-                                    ? '處理中...' 
-                                    : (editingId ? <><Icons.Edit2 /> 確認修改</> : <><Icons.PlusCircle /> 新增消費</>)
-                                }
-                            </button>
-                        </form>
-
-                        {/* 列表 */}
-                        <div className="space-y-3">
-                            {expenses
-                                .filter(e => e.day === currentDay)
-                                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                                .map((expense, idx) => {
-                                    const catInfo = CATEGORIES.find(c => c.id === expense.category);
-                                    const isEditingThis = expense.id === editingId;
-                                    return (
-                                        <div key={idx} className={`p-3 rounded-xl border shadow-sm flex items-center justify-between transition-colors ${isEditingThis ? 'bg-yellow-50 border-yellow-300' : 'bg-white border-gray-100'}`}>
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                                                    {catInfo?.icon}
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-gray-800 text-sm">{expense.item}</p>
-                                                    <p className="text-xs text-gray-400">{catInfo?.name}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold text-gray-800 mr-2">${formatMoney(expense.amount)}</span>
-                                                
-                                                <button 
-                                                    onClick={() => handleEditClick(expense)} 
-                                                    className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded"
-                                                >
-                                                    <Icons.Edit2 />
-                                                </button>
-                                                
-                                                <button 
-                                                    onClick={() => handleDelete(expense.id)} 
-                                                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
-                                                >
-                                                    <Icons.Trash2 />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            
-                            {expenses.filter(e => e.day === currentDay).length === 0 && (
-                                <div className="text-center py-8 text-gray-400">
-                                    <p className="text-sm">本日尚無紀錄</p>
-                                </div>
-                            )}
                         </div>
+                    )}
 
-                    </main>
-                </div>
-            );
-        }
+                </main>
+            </div>
+        );
+    }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);

@@ -1,0 +1,294 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { RefreshCcw, Play, Eraser, Trophy, Info } from 'lucide-react';
+
+// --- 數獨核心邏輯 ---
+
+// 建立空的 9x9 棋盤
+const getEmptyBoard = () => Array.from({ length: 9 }, () => Array(9).fill(0));
+
+// 檢查在 (row, col) 填入 num 是否合法
+const isValid = (board, row, col, num) => {
+  for (let x = 0; x < 9; x++) {
+    if (board[row][x] === num) return false;
+    if (board[x][col] === num) return false;
+  }
+  const startRow = Math.floor(row / 3) * 3;
+  const startCol = Math.floor(col / 3) * 3;
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (board[startRow + i][startCol + j] === num) return false;
+    }
+  }
+  return true;
+};
+
+// 使用回溯法隨機生成一個完整的合法數獨
+const solveAndFill = (board) => {
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      if (board[row][col] === 0) {
+        // 打亂 1-9 的順序以確保每次生成的數獨不同
+        const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+        for (let num of nums) {
+          if (isValid(board, row, col, num)) {
+            board[row][col] = num;
+            if (solveAndFill(board)) return true;
+            board[row][col] = 0;
+          }
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+// 檢查特定位置是否有衝突（不符合數獨規則）
+const checkConflict = (board, row, col) => {
+  const num = board[row][col];
+  if (num === 0) return false;
+  
+  board[row][col] = 0; // 暫時清空
+  const valid = isValid(board, row, col, num);
+  board[row][col] = num; // 還原
+  return !valid;
+};
+
+// 檢查是否勝利（全滿且無衝突）
+const checkWinCondition = (board) => {
+  for (let r = 0; r < 9; r++) {
+    for (let c = 0; c < 9; c++) {
+      if (board[r][c] === 0 || checkConflict(board, r, c)) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+// 難度設定 (挖空的格子數)
+const DIFFICULTIES = [
+  { label: '入門', holes: 20, color: 'text-green-600' },
+  { label: '簡單', holes: 35, color: 'text-blue-600' },
+  { label: '中等', holes: 45, color: 'text-yellow-600' },
+  { label: '困難', holes: 55, color: 'text-orange-600' },
+  { label: '大師', holes: 62, color: 'text-red-600' },
+];
+
+export default function App() {
+  const [initialBoard, setInitialBoard] = useState(getEmptyBoard());
+  const [board, setBoard] = useState(getEmptyBoard());
+  const [selectedCell, setSelectedCell] = useState(null); // { r, c }
+  const [difficultyIndex, setDifficultyIndex] = useState(1); // 預設為簡單
+  const [isWon, setIsWon] = useState(false);
+
+  // 初始化新遊戲
+  const startNewGame = useCallback(() => {
+    const fullBoard = getEmptyBoard();
+    solveAndFill(fullBoard);
+
+    const gameBoard = fullBoard.map(row => [...row]);
+    let holesToRemove = DIFFICULTIES[difficultyIndex].holes;
+
+    // 隨機挖空
+    while (holesToRemove > 0) {
+      const r = Math.floor(Math.random() * 9);
+      const c = Math.floor(Math.random() * 9);
+      if (gameBoard[r][c] !== 0) {
+        gameBoard[r][c] = 0;
+        holesToRemove--;
+      }
+    }
+
+    setInitialBoard(gameBoard.map(row => [...row]));
+    setBoard(gameBoard.map(row => [...row]));
+    setSelectedCell(null);
+    setIsWon(false);
+  }, [difficultyIndex]);
+
+  useEffect(() => {
+    startNewGame();
+  }, [startNewGame]);
+
+  // 處理數字輸入
+  const handleInput = useCallback((num) => {
+    if (!selectedCell || isWon) return;
+    const { r, c } = selectedCell;
+    
+    // 如果是初始提供的數字，不可修改
+    if (initialBoard[r][c] !== 0) return;
+
+    const newBoard = board.map(row => [...row]);
+    newBoard[r][c] = num;
+    setBoard(newBoard);
+
+    if (checkWinCondition(newBoard)) {
+      setIsWon(true);
+    }
+  }, [board, initialBoard, selectedCell, isWon]);
+
+  // 處理鍵盤事件
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key >= '1' && e.key <= '9') {
+        handleInput(parseInt(e.key));
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        handleInput(0);
+      } else if (selectedCell) {
+        // 支援方向鍵移動
+        let { r, c } = selectedCell;
+        if (e.key === 'ArrowUp') r = Math.max(0, r - 1);
+        if (e.key === 'ArrowDown') r = Math.min(8, r + 1);
+        if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
+        if (e.key === 'ArrowRight') c = Math.min(8, c + 1);
+        setSelectedCell({ r, c });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleInput, selectedCell]);
+
+  // 重新開始當前難度
+  const restartGame = () => {
+    setBoard(initialBoard.map(row => [...row]));
+    setSelectedCell(null);
+    setIsWon(false);
+  };
+
+  // 取得選中格子的數字，用於高亮相同的數字
+  const selectedNumber = selectedCell ? board[selectedCell.r][selectedCell.c] : null;
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-8 px-4 font-sans text-slate-800">
+      <div className="max-w-md w-full">
+        
+        {/* 頭部資訊 */}
+        <header className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-wider">數獨 Sudoku</h1>
+            <p className="text-sm text-slate-500 mt-1">訓練你的邏輯與大腦</p>
+          </div>
+          
+          <div className="flex flex-col items-end">
+            <select
+              className="bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 shadow-sm"
+              value={difficultyIndex}
+              onChange={(e) => setDifficultyIndex(Number(e.target.value))}
+            >
+              {DIFFICULTIES.map((diff, idx) => (
+                <option key={idx} value={idx}>{diff.label}</option>
+              ))}
+            </select>
+          </div>
+        </header>
+
+        {/* 勝利提示 */}
+        {isWon && (
+          <div className="mb-6 p-4 bg-green-100 border border-green-300 rounded-xl flex items-center justify-center space-x-2 text-green-800 animate-bounce">
+            <Trophy className="w-6 h-6" />
+            <span className="font-bold text-lg">恭喜！你成功解開了數獨！</span>
+          </div>
+        )}
+
+        {/* 數獨棋盤 */}
+        <div className="bg-white shadow-xl rounded-xl p-2 sm:p-4 mb-6 mx-auto w-fit">
+          <div className="grid grid-cols-9 border-4 border-slate-800 bg-slate-800 gap-[1px]">
+            {board.map((row, rIndex) => (
+              row.map((cellValue, cIndex) => {
+                const isInitial = initialBoard[rIndex][cIndex] !== 0;
+                const isSelected = selectedCell?.r === rIndex && selectedCell?.c === cIndex;
+                const isSameNumber = cellValue !== 0 && cellValue === selectedNumber;
+                const isConflict = !isInitial && checkConflict(board, rIndex, cIndex);
+                
+                // 判斷是否在同一行、列、或九宮格 (輔助高亮)
+                const isRelated = selectedCell && !isSelected && (
+                  selectedCell.r === rIndex || 
+                  selectedCell.c === cIndex ||
+                  (Math.floor(selectedCell.r / 3) === Math.floor(rIndex / 3) && Math.floor(selectedCell.c / 3) === Math.floor(cIndex / 3))
+                );
+
+                // 邊界粗細處理 (九宮格分隔)
+                let borderClasses = "border-slate-300 ";
+                if (cIndex % 3 === 2 && cIndex !== 8) borderClasses += "border-r-slate-800 border-r-2 ";
+                if (rIndex % 3 === 2 && rIndex !== 8) borderClasses += "border-b-slate-800 border-b-2 ";
+
+                // 背景顏色處理
+                let bgClass = "bg-white ";
+                if (isSelected) bgClass = "bg-blue-200 ";
+                else if (isConflict) bgClass = "bg-red-100 ";
+                else if (isSameNumber) bgClass = "bg-blue-100 ";
+                else if (isRelated) bgClass = "bg-slate-100 ";
+
+                // 文字顏色處理
+                let textClass = "text-slate-900 font-bold ";
+                if (!isInitial) {
+                  textClass = isConflict ? "text-red-600 font-bold" : "text-blue-600 font-medium";
+                }
+
+                return (
+                  <div
+                    key={`${rIndex}-${cIndex}`}
+                    className={`w-8 h-8 sm:w-11 sm:h-11 flex items-center justify-center text-lg sm:text-2xl cursor-pointer transition-colors duration-150 select-none
+                      ${bgClass} ${textClass} ${borderClasses}
+                    `}
+                    onClick={() => setSelectedCell({ r: rIndex, c: cIndex })}
+                  >
+                    {cellValue !== 0 ? cellValue : ''}
+                  </div>
+                );
+              })
+            ))}
+          </div>
+        </div>
+
+        {/* 數字鍵盤 (針對行動裝置與點擊操作) */}
+        <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+            <button
+              key={num}
+              onClick={() => handleInput(num)}
+              className="bg-white border border-slate-200 shadow-sm rounded-lg py-3 text-xl font-semibold text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all"
+            >
+              {num}
+            </button>
+          ))}
+          <button
+            onClick={() => handleInput(0)}
+            className="bg-slate-100 border border-slate-200 shadow-sm rounded-lg py-3 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-95 transition-all"
+            title="擦除"
+          >
+            <Eraser className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* 控制按鈕 */}
+        <div className="flex gap-4">
+          <button
+            onClick={startNewGame}
+            className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+          >
+            <Play className="w-5 h-5 fill-current" />
+            新遊戲
+          </button>
+          <button
+            onClick={restartGame}
+            className="flex-1 bg-white text-slate-700 border border-slate-300 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm active:scale-95 transition-all"
+          >
+            <RefreshCcw className="w-5 h-5" />
+            重新開始
+          </button>
+        </div>
+        
+        {/* 操作提示 */}
+        <div className="mt-8 flex items-start gap-2 text-sm text-slate-500 bg-slate-100 p-4 rounded-lg">
+          <Info className="w-5 h-5 shrink-0 text-slate-400" />
+          <p>
+            <strong>提示：</strong> 您可以使用滑鼠點擊格子與下方數字鍵盤，或是直接點擊格子後使用<strong className="text-slate-700">實體鍵盤的數字鍵 (1-9)</strong> 進行填寫，方向鍵可移動游標，Backspace 或 Delete 可清除數字。
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
