@@ -1,294 +1,312 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCcw, Play, Eraser, Trophy, Info } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>數獨遊戲 Sudoku</title>
+  <!-- 引入 Tailwind CSS (CDN版，免安裝直接用) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 flex flex-col items-center py-8 px-4 font-sans text-slate-800">
 
-// --- 數獨核心邏輯 ---
+  <div class="max-w-md w-full">
+    <!-- 頭部資訊 -->
+    <header class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-slate-900 tracking-wider">數獨 Sudoku</h1>
+        <p class="text-sm text-slate-500 mt-1">訓練你的邏輯與大腦</p>
+      </div>
+      <div class="flex flex-col items-end">
+        <select id="difficulty-select" class="bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 shadow-sm outline-none">
+          <option value="0">入門</option>
+          <option value="1" selected>簡單</option>
+          <option value="2">中等</option>
+          <option value="3">困難</option>
+          <option value="4">大師</option>
+        </select>
+      </div>
+    </header>
 
-// 建立空的 9x9 棋盤
-const getEmptyBoard = () => Array.from({ length: 9 }, () => Array(9).fill(0));
+    <!-- 勝利提示 (預設隱藏) -->
+    <div id="win-message" class="hidden mb-6 p-4 bg-green-100 border border-green-300 rounded-xl flex items-center justify-center space-x-2 text-green-800 animate-bounce">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      <span class="font-bold text-lg">恭喜！你成功解開了數獨！</span>
+    </div>
 
-// 檢查在 (row, col) 填入 num 是否合法
-const isValid = (board, row, col, num) => {
-  for (let x = 0; x < 9; x++) {
-    if (board[row][x] === num) return false;
-    if (board[x][col] === num) return false;
-  }
-  const startRow = Math.floor(row / 3) * 3;
-  const startCol = Math.floor(col / 3) * 3;
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; j < 3; j++) {
-      if (board[startRow + i][startCol + j] === num) return false;
-    }
-  }
-  return true;
-};
+    <!-- 數獨棋盤 -->
+    <div class="bg-white shadow-xl rounded-xl p-2 sm:p-4 mb-6 mx-auto w-full max-w-[400px]">
+      <div id="sudoku-board" class="grid grid-cols-9 border-4 border-slate-800 bg-slate-800 gap-[1px]">
+        <!-- 盤面會由 JS 動態生成 -->
+      </div>
+    </div>
 
-// 使用回溯法隨機生成一個完整的合法數獨
-const solveAndFill = (board) => {
-  for (let row = 0; row < 9; row++) {
-    for (let col = 0; col < 9; col++) {
-      if (board[row][col] === 0) {
-        // 打亂 1-9 的順序以確保每次生成的數獨不同
-        const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
-        for (let num of nums) {
-          if (isValid(board, row, col, num)) {
-            board[row][col] = num;
-            if (solveAndFill(board)) return true;
-            board[row][col] = 0;
+    <!-- 數字鍵盤 -->
+    <div id="numpad" class="grid grid-cols-5 gap-2 sm:gap-3 mb-6 w-full max-w-[400px] mx-auto">
+      <!-- 數字鍵盤由 JS 生成 -->
+    </div>
+
+    <!-- 控制按鈕 -->
+    <div class="flex gap-4 w-full max-w-[400px] mx-auto">
+      <button onclick="startNewGame()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-95 transition-all touch-manipulation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        新遊戲
+      </button>
+      <button onclick="restartGame()" class="flex-1 bg-white text-slate-700 border border-slate-300 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm active:scale-95 transition-all touch-manipulation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+        重新開始
+      </button>
+    </div>
+    
+    <!-- 操作提示 -->
+    <div class="mt-8 flex items-start gap-2 text-sm text-slate-500 bg-slate-100 p-4 rounded-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      <p>
+        <strong>提示：</strong> 您可以使用滑鼠點擊格子與下方數字鍵盤，或是直接點擊格子後使用<strong class="text-slate-700">實體鍵盤的數字鍵 (1-9)</strong> 進行填寫，方向鍵可移動游標，Backspace 或 Delete 可清除數字。
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // --- 數獨核心邏輯與狀態管理 ---
+    const getEmptyBoard = () => Array.from({ length: 9 }, () => Array(9).fill(0));
+
+    const DIFFICULTIES = [
+      { label: '入門', holes: 20 },
+      { label: '簡單', holes: 35 },
+      { label: '中等', holes: 45 },
+      { label: '困難', holes: 55 },
+      { label: '大師', holes: 62 },
+    ];
+
+    let initialBoard = getEmptyBoard();
+    let board = getEmptyBoard();
+    let selectedCell = null; // { r, c }
+    let isWon = false;
+
+    // 檢查合法性
+    const isValid = (checkBoard, row, col, num) => {
+      for (let x = 0; x < 9; x++) {
+        if (checkBoard[row][x] === num) return false;
+        if (checkBoard[x][col] === num) return false;
+      }
+      const startRow = Math.floor(row / 3) * 3;
+      const startCol = Math.floor(col / 3) * 3;
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          if (checkBoard[startRow + i][startCol + j] === num) return false;
+        }
+      }
+      return true;
+    };
+
+    // 回溯法生成
+    const solveAndFill = (genBoard) => {
+      for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+          if (genBoard[row][col] === 0) {
+            const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+            for (let num of nums) {
+              if (isValid(genBoard, row, col, num)) {
+                genBoard[row][col] = num;
+                if (solveAndFill(genBoard)) return true;
+                genBoard[row][col] = 0;
+              }
+            }
+            return false;
           }
         }
-        return false;
+      }
+      return true;
+    };
+
+    // 檢查衝突
+    const checkConflict = (checkBoard, row, col) => {
+      const num = checkBoard[row][col];
+      if (num === 0) return false;
+      checkBoard[row][col] = 0;
+      const valid = isValid(checkBoard, row, col, num);
+      checkBoard[row][col] = num;
+      return !valid;
+    };
+
+    // 檢查勝利
+    const checkWinCondition = (checkBoard) => {
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (checkBoard[r][c] === 0 || checkConflict(checkBoard, r, c)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    // --- UI 渲染與事件處理 ---
+
+    // 開始新遊戲
+    function startNewGame() {
+      const diffIndex = parseInt(document.getElementById('difficulty-select').value);
+      const fullBoard = getEmptyBoard();
+      solveAndFill(fullBoard);
+
+      const gameBoard = fullBoard.map(row => [...row]);
+      let holesToRemove = DIFFICULTIES[diffIndex].holes;
+
+      while (holesToRemove > 0) {
+        const r = Math.floor(Math.random() * 9);
+        const c = Math.floor(Math.random() * 9);
+        if (gameBoard[r][c] !== 0) {
+          gameBoard[r][c] = 0;
+          holesToRemove--;
+        }
+      }
+
+      initialBoard = gameBoard.map(row => [...row]);
+      board = gameBoard.map(row => [...row]);
+      selectedCell = null;
+      isWon = false;
+      
+      updateUI();
+    }
+
+    // 重新開始
+    function restartGame() {
+      board = initialBoard.map(row => [...row]);
+      selectedCell = null;
+      isWon = false;
+      updateUI();
+    }
+
+    // 處理輸入
+    function handleInput(num) {
+      if (!selectedCell || isWon) return;
+      const { r, c } = selectedCell;
+      
+      if (initialBoard[r][c] !== 0) return; // 初始數字不可改
+
+      board[r][c] = num;
+
+      if (checkWinCondition(board)) {
+        isWon = true;
+      }
+      updateUI();
+    }
+
+    // 更新畫面
+    function updateUI() {
+      renderBoard();
+      const winMsg = document.getElementById('win-message');
+      if (isWon) {
+        winMsg.classList.remove('hidden');
+      } else {
+        winMsg.classList.add('hidden');
       }
     }
-  }
-  return true;
-};
 
-// 檢查特定位置是否有衝突（不符合數獨規則）
-const checkConflict = (board, row, col) => {
-  const num = board[row][col];
-  if (num === 0) return false;
-  
-  board[row][col] = 0; // 暫時清空
-  const valid = isValid(board, row, col, num);
-  board[row][col] = num; // 還原
-  return !valid;
-};
+    // 渲染棋盤
+    function renderBoard() {
+      const boardContainer = document.getElementById('sudoku-board');
+      boardContainer.innerHTML = ''; // 清空
+      const selectedNumber = selectedCell ? board[selectedCell.r][selectedCell.c] : null;
 
-// 檢查是否勝利（全滿且無衝突）
-const checkWinCondition = (board) => {
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      if (board[r][c] === 0 || checkConflict(board, r, c)) {
-        return false;
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cellValue = board[r][c];
+          const isInitial = initialBoard[r][c] !== 0;
+          const isSelected = selectedCell?.r === r && selectedCell?.c === c;
+          const isSameNumber = cellValue !== 0 && cellValue === selectedNumber;
+          const isConflicting = !isInitial && checkConflict(board, r, c);
+          
+          const isRelated = selectedCell && !isSelected && (
+            selectedCell.r === r || 
+            selectedCell.c === c ||
+            (Math.floor(selectedCell.r / 3) === Math.floor(r / 3) && Math.floor(selectedCell.c / 3) === Math.floor(c / 3))
+          );
+
+          const cell = document.createElement('div');
+          
+          // 基礎樣式
+          let classes = ["w-full", "aspect-square", "flex", "items-center", "justify-center", "text-lg", "sm:text-2xl", "cursor-pointer", "transition-colors", "duration-150", "select-none", "touch-manipulation", "border-slate-300"];
+          
+          // 九宮格邊界
+          if (c % 3 === 2 && c !== 8) classes.push("border-r-slate-800", "border-r-2");
+          if (r % 3 === 2 && r !== 8) classes.push("border-b-slate-800", "border-b-2");
+
+          // 背景顏色
+          if (isSelected) classes.push("bg-blue-200");
+          else if (isConflicting) classes.push("bg-red-100");
+          else if (isSameNumber) classes.push("bg-blue-100");
+          else if (isRelated) classes.push("bg-slate-100");
+          else classes.push("bg-white");
+
+          // 文字顏色
+          if (isInitial) {
+            classes.push("text-slate-900", "font-bold");
+          } else {
+            if (isConflicting) classes.push("text-red-600", "font-bold");
+            else classes.push("text-blue-600", "font-medium");
+          }
+
+          cell.className = classes.join(' ');
+          cell.textContent = cellValue !== 0 ? cellValue : '';
+          
+          // 點擊事件
+          cell.onclick = () => {
+            selectedCell = { r, c };
+            updateUI();
+          };
+
+          boardContainer.appendChild(cell);
+        }
       }
     }
-  }
-  return true;
-};
 
-// 難度設定 (挖空的格子數)
-const DIFFICULTIES = [
-  { label: '入門', holes: 20, color: 'text-green-600' },
-  { label: '簡單', holes: 35, color: 'text-blue-600' },
-  { label: '中等', holes: 45, color: 'text-yellow-600' },
-  { label: '困難', holes: 55, color: 'text-orange-600' },
-  { label: '大師', holes: 62, color: 'text-red-600' },
-];
-
-export default function App() {
-  const [initialBoard, setInitialBoard] = useState(getEmptyBoard());
-  const [board, setBoard] = useState(getEmptyBoard());
-  const [selectedCell, setSelectedCell] = useState(null); // { r, c }
-  const [difficultyIndex, setDifficultyIndex] = useState(1); // 預設為簡單
-  const [isWon, setIsWon] = useState(false);
-
-  // 初始化新遊戲
-  const startNewGame = useCallback(() => {
-    const fullBoard = getEmptyBoard();
-    solveAndFill(fullBoard);
-
-    const gameBoard = fullBoard.map(row => [...row]);
-    let holesToRemove = DIFFICULTIES[difficultyIndex].holes;
-
-    // 隨機挖空
-    while (holesToRemove > 0) {
-      const r = Math.floor(Math.random() * 9);
-      const c = Math.floor(Math.random() * 9);
-      if (gameBoard[r][c] !== 0) {
-        gameBoard[r][c] = 0;
-        holesToRemove--;
+    // 渲染數字鍵盤
+    function renderNumpad() {
+      const numpad = document.getElementById('numpad');
+      numpad.innerHTML = '';
+      
+      for (let i = 1; i <= 9; i++) {
+        const btn = document.createElement('button');
+        btn.className = "bg-white border border-slate-200 shadow-sm rounded-lg py-3 sm:py-4 text-xl sm:text-2xl font-semibold text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all touch-manipulation";
+        btn.textContent = i;
+        btn.onclick = () => handleInput(i);
+        numpad.appendChild(btn);
       }
+
+      // 擦除按鈕
+      const eraser = document.createElement('button');
+      eraser.className = "bg-slate-100 border border-slate-200 shadow-sm rounded-lg py-3 sm:py-4 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-95 transition-all touch-manipulation";
+      eraser.title = "擦除";
+      eraser.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>`;
+      eraser.onclick = () => handleInput(0);
+      numpad.appendChild(eraser);
     }
 
-    setInitialBoard(gameBoard.map(row => [...row]));
-    setBoard(gameBoard.map(row => [...row]));
-    setSelectedCell(null);
-    setIsWon(false);
-  }, [difficultyIndex]);
-
-  useEffect(() => {
-    startNewGame();
-  }, [startNewGame]);
-
-  // 處理數字輸入
-  const handleInput = useCallback((num) => {
-    if (!selectedCell || isWon) return;
-    const { r, c } = selectedCell;
-    
-    // 如果是初始提供的數字，不可修改
-    if (initialBoard[r][c] !== 0) return;
-
-    const newBoard = board.map(row => [...row]);
-    newBoard[r][c] = num;
-    setBoard(newBoard);
-
-    if (checkWinCondition(newBoard)) {
-      setIsWon(true);
-    }
-  }, [board, initialBoard, selectedCell, isWon]);
-
-  // 處理鍵盤事件
-  useEffect(() => {
-    const handleKeyDown = (e) => {
+    // 監聽實體鍵盤事件
+    window.addEventListener('keydown', (e) => {
       if (e.key >= '1' && e.key <= '9') {
         handleInput(parseInt(e.key));
       } else if (e.key === 'Backspace' || e.key === 'Delete') {
         handleInput(0);
       } else if (selectedCell) {
-        // 支援方向鍵移動
         let { r, c } = selectedCell;
         if (e.key === 'ArrowUp') r = Math.max(0, r - 1);
         if (e.key === 'ArrowDown') r = Math.min(8, r + 1);
         if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
         if (e.key === 'ArrowRight') c = Math.min(8, c + 1);
-        setSelectedCell({ r, c });
+        selectedCell = { r, c };
+        updateUI();
       }
-    };
+    });
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleInput, selectedCell]);
+    // 難度切換時自動開新局
+    document.getElementById('difficulty-select').addEventListener('change', startNewGame);
 
-  // 重新開始當前難度
-  const restartGame = () => {
-    setBoard(initialBoard.map(row => [...row]));
-    setSelectedCell(null);
-    setIsWon(false);
-  };
+    // 初始化
+    renderNumpad();
+    startNewGame();
 
-  // 取得選中格子的數字，用於高亮相同的數字
-  const selectedNumber = selectedCell ? board[selectedCell.r][selectedCell.c] : null;
-
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-8 px-4 font-sans text-slate-800">
-      <div className="max-w-md w-full">
-        
-        {/* 頭部資訊 */}
-        <header className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-wider">數獨 Sudoku</h1>
-            <p className="text-sm text-slate-500 mt-1">訓練你的邏輯與大腦</p>
-          </div>
-          
-          <div className="flex flex-col items-end">
-            <select
-              className="bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 shadow-sm"
-              value={difficultyIndex}
-              onChange={(e) => setDifficultyIndex(Number(e.target.value))}
-            >
-              {DIFFICULTIES.map((diff, idx) => (
-                <option key={idx} value={idx}>{diff.label}</option>
-              ))}
-            </select>
-          </div>
-        </header>
-
-        {/* 勝利提示 */}
-        {isWon && (
-          <div className="mb-6 p-4 bg-green-100 border border-green-300 rounded-xl flex items-center justify-center space-x-2 text-green-800 animate-bounce">
-            <Trophy className="w-6 h-6" />
-            <span className="font-bold text-lg">恭喜！你成功解開了數獨！</span>
-          </div>
-        )}
-
-        {/* 數獨棋盤 */}
-        <div className="bg-white shadow-xl rounded-xl p-2 sm:p-4 mb-6 mx-auto w-fit">
-          <div className="grid grid-cols-9 border-4 border-slate-800 bg-slate-800 gap-[1px]">
-            {board.map((row, rIndex) => (
-              row.map((cellValue, cIndex) => {
-                const isInitial = initialBoard[rIndex][cIndex] !== 0;
-                const isSelected = selectedCell?.r === rIndex && selectedCell?.c === cIndex;
-                const isSameNumber = cellValue !== 0 && cellValue === selectedNumber;
-                const isConflict = !isInitial && checkConflict(board, rIndex, cIndex);
-                
-                // 判斷是否在同一行、列、或九宮格 (輔助高亮)
-                const isRelated = selectedCell && !isSelected && (
-                  selectedCell.r === rIndex || 
-                  selectedCell.c === cIndex ||
-                  (Math.floor(selectedCell.r / 3) === Math.floor(rIndex / 3) && Math.floor(selectedCell.c / 3) === Math.floor(cIndex / 3))
-                );
-
-                // 邊界粗細處理 (九宮格分隔)
-                let borderClasses = "border-slate-300 ";
-                if (cIndex % 3 === 2 && cIndex !== 8) borderClasses += "border-r-slate-800 border-r-2 ";
-                if (rIndex % 3 === 2 && rIndex !== 8) borderClasses += "border-b-slate-800 border-b-2 ";
-
-                // 背景顏色處理
-                let bgClass = "bg-white ";
-                if (isSelected) bgClass = "bg-blue-200 ";
-                else if (isConflict) bgClass = "bg-red-100 ";
-                else if (isSameNumber) bgClass = "bg-blue-100 ";
-                else if (isRelated) bgClass = "bg-slate-100 ";
-
-                // 文字顏色處理
-                let textClass = "text-slate-900 font-bold ";
-                if (!isInitial) {
-                  textClass = isConflict ? "text-red-600 font-bold" : "text-blue-600 font-medium";
-                }
-
-                return (
-                  <div
-                    key={`${rIndex}-${cIndex}`}
-                    className={`w-8 h-8 sm:w-11 sm:h-11 flex items-center justify-center text-lg sm:text-2xl cursor-pointer transition-colors duration-150 select-none
-                      ${bgClass} ${textClass} ${borderClasses}
-                    `}
-                    onClick={() => setSelectedCell({ r: rIndex, c: cIndex })}
-                  >
-                    {cellValue !== 0 ? cellValue : ''}
-                  </div>
-                );
-              })
-            ))}
-          </div>
-        </div>
-
-        {/* 數字鍵盤 (針對行動裝置與點擊操作) */}
-        <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-6">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-            <button
-              key={num}
-              onClick={() => handleInput(num)}
-              className="bg-white border border-slate-200 shadow-sm rounded-lg py-3 text-xl font-semibold text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 active:scale-95 transition-all"
-            >
-              {num}
-            </button>
-          ))}
-          <button
-            onClick={() => handleInput(0)}
-            className="bg-slate-100 border border-slate-200 shadow-sm rounded-lg py-3 flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-95 transition-all"
-            title="擦除"
-          >
-            <Eraser className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* 控制按鈕 */}
-        <div className="flex gap-4">
-          <button
-            onClick={startNewGame}
-            className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
-          >
-            <Play className="w-5 h-5 fill-current" />
-            新遊戲
-          </button>
-          <button
-            onClick={restartGame}
-            className="flex-1 bg-white text-slate-700 border border-slate-300 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-sm active:scale-95 transition-all"
-          >
-            <RefreshCcw className="w-5 h-5" />
-            重新開始
-          </button>
-        </div>
-        
-        {/* 操作提示 */}
-        <div className="mt-8 flex items-start gap-2 text-sm text-slate-500 bg-slate-100 p-4 rounded-lg">
-          <Info className="w-5 h-5 shrink-0 text-slate-400" />
-          <p>
-            <strong>提示：</strong> 您可以使用滑鼠點擊格子與下方數字鍵盤，或是直接點擊格子後使用<strong className="text-slate-700">實體鍵盤的數字鍵 (1-9)</strong> 進行填寫，方向鍵可移動游標，Backspace 或 Delete 可清除數字。
-          </p>
-        </div>
-
-      </div>
-    </div>
-  );
-}
+  </script>
+</body>
+</html>
