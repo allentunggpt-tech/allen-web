@@ -2,74 +2,81 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>台灣麻將16張 - 純JS新手版</title>
-  <!-- 載入 Tailwind CSS 方便快速排版 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>台灣麻將16張 - 手機實戰版</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 確保麻將牌的特殊符號 (Emoji) 可以正常顯示 */
-    .mahjong-tile {
-      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-    }
+    body { overscroll-behavior-y: none; /* 防止手機瀏覽器下拉重整 */ }
+    .mahjong-tile { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+    /* 隱藏捲軸但保留滑動功能 */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="min-h-screen bg-emerald-800 p-4 md:p-8 flex flex-col font-sans text-white">
+<body class="h-screen bg-emerald-900 flex justify-center text-white font-sans overflow-hidden">
 
-  <!-- 頂部資訊列 -->
-  <header class="flex justify-between items-center bg-emerald-900 p-4 rounded-xl shadow-lg mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-yellow-400 tracking-wider">台灣麻將 16張</h1>
-      <p class="text-emerald-300 text-sm">純 HTML + JS 開發版</p>
-    </div>
-    <div class="flex gap-4 items-center">
-      <div class="bg-emerald-950 px-4 py-2 rounded text-center">
-        <span class="block text-xs text-emerald-400">牌山剩餘</span>
-        <span id="deck-count" class="text-xl font-mono font-bold">0</span>
-      </div>
-      <button 
-        onclick="startNewGame()"
-        class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-md"
-      >
-        重新開局
-      </button>
-    </div>
-  </header>
-
-  <!-- 海底 (捨棄的牌) -->
-  <div id="discards-container" class="flex-1 bg-emerald-700/30 rounded-xl p-6 border-2 border-emerald-700/50 flex flex-wrap content-start shadow-inner overflow-y-auto min-h-[200px] mb-8">
-    <!-- 捨棄的牌會被 JS 動態塞入這裡 -->
-  </div>
-
-  <!-- 玩家手牌區 -->
-  <div class="bg-emerald-900 p-4 rounded-xl shadow-2xl">
+  <!-- 手機視窗容器 (限制最大寬度以模擬手機) -->
+  <div class="w-full max-w-md bg-emerald-800 h-full flex flex-col relative shadow-2xl">
     
-    <!-- 操作提示列 -->
-    <div class="flex justify-between items-center mb-4 px-2">
-      <div id="status-text" class="text-yellow-300 font-bold animate-bounce">
-        請摸牌
+    <!-- 頂部資訊：對手狀態與牌山 -->
+    <header class="bg-emerald-950/80 p-2 flex justify-between items-center text-xs shadow-md z-10">
+      <div class="flex gap-3">
+        <div id="info-p3" class="text-gray-400">上家(北): 16張</div>
+        <div id="info-p2" class="text-gray-400">對家(西): 16張</div>
+        <div id="info-p1" class="text-gray-400">下家(南): 16張</div>
       </div>
-      <button
-        id="draw-btn"
-        onclick="handleDraw()"
-        class="px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all bg-blue-600 hover:bg-blue-500 text-white cursor-pointer hover:scale-105"
-      >
-        摸牌 (Draw)
-      </button>
+      <div class="bg-emerald-700 px-2 py-1 rounded text-yellow-300 font-bold border border-emerald-600">
+        剩餘: <span id="deck-count">0</span>
+      </div>
+    </header>
+
+    <!-- 中間：海底 (捨棄的牌) -->
+    <main class="flex-1 p-2 overflow-y-auto hide-scrollbar relative bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-700 to-emerald-900">
+      <!-- 狀態提示字 -->
+      <div id="game-status" class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-20 text-4xl font-black text-white">
+        遊戲準備中
+      </div>
+      
+      <div id="sea-container" class="flex flex-wrap content-start gap-0.5 relative z-10">
+        <!-- 捨牌動態生成 -->
+      </div>
+    </main>
+
+    <!-- 玩家花牌與吃碰區 (明牌) -->
+    <div class="bg-emerald-950/50 p-1 flex items-center h-10 overflow-x-auto hide-scrollbar border-t border-emerald-700/50">
+      <div class="text-[10px] text-emerald-400 mr-2 min-w-max">花牌/明牌:</div>
+      <div id="player-melds" class="flex gap-1"></div>
     </div>
 
-    <!-- 手牌展示 -->
-    <div class="flex items-end justify-center flex-wrap md:flex-nowrap">
-      <!-- 基礎 16 張牌 -->
-      <div id="hand-container" class="flex flex-wrap justify-center"></div>
-
-      <!-- 剛摸進的第 17 張牌 -->
-      <div id="drawn-container" class="border-emerald-700 flex"></div>
+    <!-- 動作按鈕區 (吃、碰、過) - 預設隱藏 -->
+    <div id="action-bar" class="hidden absolute bottom-28 left-0 w-full bg-black/80 p-3 flex justify-center gap-4 z-50 backdrop-blur-sm">
+      <button onclick="handleAction('pong')" id="btn-pong" class="hidden bg-yellow-600 active:bg-yellow-500 px-6 py-2 rounded-lg font-bold text-xl shadow-[0_4px_0_rgb(161,98,7)]">碰</button>
+      <button onclick="handleAction('chi')" id="btn-chi" class="hidden bg-blue-600 active:bg-blue-500 px-6 py-2 rounded-lg font-bold text-xl shadow-[0_4px_0_rgb(37,99,235)]">吃</button>
+      <button onclick="handleAction('pass')" class="bg-gray-600 active:bg-gray-500 px-6 py-2 rounded-lg font-bold text-xl shadow-[0_4px_0_rgb(75,85,99)]">過</button>
     </div>
+
+    <!-- 底部：玩家手牌區 -->
+    <footer class="bg-emerald-900 pb-6 pt-2 px-1 border-t-[3px] border-emerald-950 relative shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
+      
+      <div class="flex items-end overflow-x-auto hide-scrollbar pb-2 pt-4">
+        <!-- 手牌容器 -->
+        <div id="hand-container" class="flex gap-[1px] pl-1"></div>
+        
+        <!-- 剛摸的牌 -->
+        <div class="ml-2 pl-2 border-l border-emerald-700/50 flex">
+          <div id="drawn-container"></div>
+        </div>
+      </div>
+
+      <!-- 控制按鈕 (手機版置於最右下角或浮動) -->
+      <button onclick="startNewGame()" class="absolute top-2 right-2 text-xs bg-emerald-700 px-2 py-1 rounded text-emerald-200 active:bg-emerald-600">重局</button>
+    </footer>
+
   </div>
 
   <script>
     // ==========================================
-    // 1. 定義麻將牌資料 (跟五子棋定義棋盤陣列很像)
+    // 1. 定義麻將牌資料
     // ==========================================
     const SUITS = [
       { type: '萬', chars: ['🀇','🀈','🀉','🀊','🀋','🀌','🀍','🀎','🀏'], baseWeight: 10 },
@@ -81,46 +88,42 @@
     const FLOWERS = ['🀢','🀣','🀤','🀥','🀦','🀧','🀨','🀩'];
 
     // ==========================================
-    // 2. 遊戲狀態變數 (全域變數)
+    // 2. 遊戲狀態變數
     // ==========================================
-    let deck = [];        // 牌山
-    let hand = [];        // 玩家手牌 (16張)
-    let drawnTile = null; // 剛摸的牌 (第17張)
-    let discards = [];    // 捨棄的牌 (海底)
-    let gameState = 'idle';
+    let deck = [];
+    let sea = []; // 海底的牌
+    
+    // 4位玩家資料 (0是玩家自己)
+    let players = [
+      { id: 0, name: '你(東)', hand: [], flowers: [], melds: [], drawnTile: null },
+      { id: 1, name: '下家(南)', hand: [], flowers: [], melds: [], drawnTile: null },
+      { id: 2, name: '對家(西)', hand: [], flowers: [], melds: [], drawnTile: null },
+      { id: 3, name: '上家(北)', hand: [], flowers: [], melds: [], drawnTile: null },
+    ];
+
+    let currentTurn = 0; 
+    let gameState = 'idle'; // idle, playing, waiting_action
+    let pendingDiscard = null; // 剛被打出、正在等待判定是否有人要吃碰的牌
+    let actionOptions = { canPong: false, canChi: false };
 
     // ==========================================
-    // 3. 核心邏輯函數
+    // 3. 核心邏輯
     // ==========================================
 
-    // 產生 144 張牌並洗牌
     function createShuffledDeck() {
       let newDeck = [];
       let idCounter = 0;
-
-      // 放入基本牌 (每種4張)
       SUITS.forEach(suit => {
         suit.chars.forEach((char, index) => {
           for (let i = 0; i < 4; i++) {
-            newDeck.push({
-              id: idCounter++,
-              char: char,
-              weight: suit.baseWeight + index,
-              type: suit.type,
-              name: suit.names ? suit.names[index] : `${index + 1}${suit.type}`
-            });
+            newDeck.push({ id: idCounter++, char, weight: suit.baseWeight + index, type: suit.type, value: index + 1 });
           }
         });
       });
-
-      // 放入花牌 (8張)
       FLOWERS.forEach((char, index) => {
-        newDeck.push({
-          id: idCounter++, char: char, weight: 60 + index, type: '花', name: `花${index + 1}`
-        });
+        newDeck.push({ id: idCounter++, char, weight: 60 + index, type: '花' });
       });
-
-      // 洗牌演算法
+      // 洗牌
       for (let i = newDeck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
@@ -128,153 +131,357 @@
       return newDeck;
     }
 
-    // 將手牌依照大小排序 (理牌)
     function sortHand(handArray) {
       return [...handArray].sort((a, b) => a.weight - b.weight);
+    }
+
+    // 自動補花邏輯
+    function processFlowers(playerIndex) {
+      let p = players[playerIndex];
+      let hasFlower = true;
+      while (hasFlower && deck.length > 0) {
+        let fIndex = p.hand.findIndex(t => t.type === '花');
+        if (fIndex >= 0) {
+          // 把花牌移到 flowers 區
+          let f = p.hand.splice(fIndex, 1)[0];
+          p.flowers.push(f);
+          // 補一張牌進手牌
+          p.hand.push(deck.pop()); 
+        } else {
+          hasFlower = false;
+        }
+      }
+      // 如果是剛摸的牌是花牌
+      while (p.drawnTile && p.drawnTile.type === '花' && deck.length > 0) {
+        p.flowers.push(p.drawnTile);
+        p.drawnTile = deck.pop();
+      }
+      p.hand = sortHand(p.hand);
     }
 
     // 開始新遊戲
     function startNewGame() {
       deck = createShuffledDeck();
-      hand = sortHand(deck.splice(0, 16)); // 拿走前16張當底牌
-      drawnTile = deck.shift();            // 莊家多摸一張
-      discards = [];
+      sea = [];
+      
+      // 清空所有玩家資料並發 16 張牌
+      players.forEach(p => {
+        p.hand = deck.splice(0, 16);
+        p.flowers = [];
+        p.melds = [];
+        p.drawnTile = null;
+        processFlowers(p.id); // 發完牌立刻補花
+      });
+
+      // 莊家(玩家0)多摸一張
+      currentTurn = 0;
+      players[0].drawnTile = deck.shift();
+      processFlowers(0);
+
       gameState = 'playing';
-      
-      render(); // 更新畫面
+      updateStatus("請打出一張牌");
+      render();
     }
 
-    // 摸牌
-    function handleDraw() {
-      if (drawnTile !== null) {
-        alert("請先打出一張牌！"); return;
-      }
+    // 換下一位玩家
+    function nextTurn() {
       if (deck.length === 0) {
-        alert("牌山已經沒牌了（流局）！");
+        updateStatus("流局！");
         gameState = 'gameover';
-        render(); return;
+        render();
+        return;
       }
+
+      currentTurn = (currentTurn + 1) % 4;
+      let p = players[currentTurn];
       
-      drawnTile = deck.shift();
-      render(); // 更新畫面
+      // 摸牌
+      p.drawnTile = deck.shift();
+      processFlowers(currentTurn);
+
+      if (currentTurn === 0) {
+        // 輪到玩家
+        gameState = 'playing';
+        updateStatus("輪到你摸牌、打牌");
+        render();
+      } else {
+        // 輪到電腦 (延遲 1 秒模擬思考)
+        updateStatus(`${p.name} 思考中...`);
+        render();
+        setTimeout(() => botPlay(currentTurn), 1000);
+      }
     }
 
-    // 打牌
-    function handleDiscard(tile, source) {
-      if (drawnTile === null || gameState !== 'playing') return;
+    // 電腦自動打牌邏輯 (隨機打出一張)
+    function botPlay(botId) {
+      let p = players[botId];
+      // 為了簡單，電腦隨機把手牌或剛摸的牌打出去
+      let allTiles = [...p.hand, p.drawnTile].filter(t => t !== null);
+      let randomIndex = Math.floor(Math.random() * allTiles.length);
+      let tileToDiscard = allTiles[randomIndex];
 
-      // 把打出的牌丟到海底
-      discards.push(tile);
-
-      if (source === 'drawn') {
-        // 如果打出的是剛摸的那張
-        drawnTile = null;
+      // 從電腦手牌移除
+      if (p.drawnTile && p.drawnTile.id === tileToDiscard.id) {
+        p.drawnTile = null;
       } else {
-        // 如果打出的是原本手牌裡的
-        hand = hand.filter(t => t.id !== tile.id); // 從手牌拿掉這張
-        hand.push(drawnTile);                      // 把剛才摸的牌塞進手牌
-        hand = sortHand(hand);                     // 重新理牌
-        drawnTile = null;
+        p.hand = p.hand.filter(t => t.id !== tileToDiscard.id);
+        if (p.drawnTile) p.hand.push(p.drawnTile); // 剛摸的收進手牌
+        p.drawnTile = null;
+        p.hand = sortHand(p.hand);
       }
 
-      render(); // 更新畫面
+      // 丟到海底並觸發檢查
+      processDiscard(tileToDiscard, botId);
+    }
+
+    // 玩家打牌
+    function playerDiscard(tileId, source) {
+      if (currentTurn !== 0 || gameState !== 'playing') return;
+
+      let p = players[0];
+      let tileToDiscard = null;
+
+      if (source === 'drawn' && p.drawnTile) {
+        tileToDiscard = p.drawnTile;
+        p.drawnTile = null;
+      } else {
+        let index = p.hand.findIndex(t => t.id === tileId);
+        if (index > -1) {
+          tileToDiscard = p.hand.splice(index, 1)[0];
+          if (p.drawnTile) {
+            p.hand.push(p.drawnTile);
+            p.drawnTile = null;
+          }
+          p.hand = sortHand(p.hand);
+        }
+      }
+
+      if (tileToDiscard) {
+        processDiscard(tileToDiscard, 0);
+      }
+    }
+
+    // 處理任何人打牌後的共同邏輯
+    function processDiscard(tile, sourceId) {
+      sea.push(tile); // 加入海底
+      
+      // 如果是電腦打的牌，檢查玩家能不能吃碰
+      if (sourceId !== 0) {
+        checkPlayerActions(tile, sourceId);
+      } else {
+        // 如果是玩家自己打的，直接換下一位
+        nextTurn();
+      }
+    }
+
+    // 檢查玩家(0)是否有吃碰動作
+    function checkPlayerActions(tile, sourceId) {
+      let p = players[0];
+      actionOptions = { canPong: false, canChi: false };
+      
+      // 檢查碰 (手牌有兩張一樣的)
+      let sameTiles = p.hand.filter(t => t.weight === tile.weight);
+      if (sameTiles.length >= 2) {
+        actionOptions.canPong = true;
+      }
+
+      // 檢查吃 (必須是上家 sourceId === 3 打出的，且是萬筒索)
+      if (sourceId === 3 && ['萬','筒','索'].includes(tile.type)) {
+        let w = tile.weight;
+        let hasM1 = p.hand.some(t => t.weight === w - 1);
+        let hasM2 = p.hand.some(t => t.weight === w - 2);
+        let hasP1 = p.hand.some(t => t.weight === w + 1);
+        let hasP2 = p.hand.some(t => t.weight === w + 2);
+        
+        // 判斷能否湊成順子: (X-2, X-1, [X]) 或 (X-1, [X], X+1) 或 ([X], X+1, X+2)
+        if ((hasM2 && hasM1) || (hasM1 && hasP1) || (hasP1 && hasP2)) {
+          actionOptions.canChi = true;
+        }
+      }
+
+      if (actionOptions.canPong || actionOptions.canChi) {
+        gameState = 'waiting_action';
+        pendingDiscard = tile;
+        updateStatus("你要吃或碰嗎？");
+        render();
+      } else {
+        // 沒有動作可做，繼續下一局
+        nextTurn();
+      }
+    }
+
+    // 處理玩家點擊動作按鈕 (吃/碰/過)
+    function handleAction(actionType) {
+      if (gameState !== 'waiting_action') return;
+      let p = players[0];
+
+      if (actionType === 'pass') {
+        // 放棄吃碰
+        gameState = 'idle';
+        pendingDiscard = null;
+        nextTurn();
+        return;
+      }
+
+      // 如果選擇碰
+      if (actionType === 'pong') {
+        // 從海底拿走那張牌
+        let tile = sea.pop(); 
+        
+        // 從手牌找出兩張一樣的移除
+        let count = 0;
+        p.hand = p.hand.filter(t => {
+          if (t.weight === tile.weight && count < 2) {
+            count++;
+            return false; // 移除
+          }
+          return true; // 保留
+        });
+        
+        // 放入明牌區 (melds) 這裡簡化顯示，只推入文字代表碰了什麼
+        p.melds.push(`碰${tile.char}`);
+        
+        // 輪到玩家打牌 (碰完不能摸牌，直接打)
+        currentTurn = 0;
+        gameState = 'playing';
+        pendingDiscard = null;
+        updateStatus("碰！請打出一張牌");
+        render();
+      }
+
+      // 簡化版的吃：為了避免介面太複雜讓使用者選牌，這裡實作「自動抓最近的兩張牌吃」
+      if (actionType === 'chi') {
+        let tile = sea.pop();
+        let w = tile.weight;
+        // 尋找要搭配的兩張牌 (這裡用非常簡單的貪婪法抓牌)
+        let t1, t2;
+        let pHandW = p.hand.map(t => t.weight);
+        
+        if (pHandW.includes(w-1) && pHandW.includes(w+1)) { t1=w-1; t2=w+1; }
+        else if (pHandW.includes(w-2) && pHandW.includes(w-1)) { t1=w-2; t2=w-1; }
+        else if (pHandW.includes(w+1) && pHandW.includes(w+2)) { t1=w+1; t2=w+2; }
+
+        // 移除被吃掉的牌
+        p.hand = p.hand.filter(t => {
+          if (t.weight === t1) { t1 = -1; return false; }
+          if (t.weight === t2) { t2 = -1; return false; }
+          return true;
+        });
+
+        p.melds.push(`吃${tile.char}`);
+        currentTurn = 0;
+        gameState = 'playing';
+        pendingDiscard = null;
+        updateStatus("吃！請打出一張牌");
+        render();
+      }
     }
 
     // ==========================================
-    // 4. 畫面渲染邏輯 (DOM 操作)
+    // 4. 畫面渲染邏輯 (UI 專為手機優化)
     // ==========================================
 
-    // 產生單張麻將牌的 HTML 元素
+    function updateStatus(text) {
+      document.getElementById('game-status').textContent = text;
+    }
+
+    // 產生麻將牌 DOM (體積縮小以適應手機)
     function createTileElement(tile, type, onClick) {
       const div = document.createElement('div');
       
-      // 決定文字顏色
       let textColor = 'text-gray-900';
       if (tile.type === '萬') textColor = 'text-red-700';
       if (tile.type === '筒') textColor = 'text-blue-800';
       if (tile.type === '索') textColor = 'text-green-700';
+      if (tile.type === '花') textColor = 'text-pink-600';
 
-      // 基礎樣式
-      let baseClasses = `mahjong-tile relative flex items-center justify-center bg-[#fdfdfc] border-b-[6px] border-r-[2px] border-[#d4d4d2] rounded-md shadow-md select-none transition-transform duration-100 ${textColor}`;
+      // 手機版特化樣式
+      let baseClasses = `mahjong-tile relative flex items-center justify-center bg-[#fdfdfc] border-b-[4px] border-r-[2px] border-[#d4d4d2] rounded shadow select-none ${textColor}`;
 
-      // 根據狀態(海底、手牌、剛摸進)設定不同大小和動畫
-      if (type === 'discard') {
-        div.className = `${baseClasses} w-10 h-14 text-4xl m-0.5`;
+      if (type === 'sea') {
+        // 海底的牌更小
+        div.className = `${baseClasses} w-7 h-10 text-xl m-[1px] bg-gray-200 border-gray-400`;
+      } else if (type === 'flower') {
+        // 花牌區
+        div.className = `${baseClasses} w-6 h-8 text-sm m-[1px]`;
       } else {
-        div.className = `${baseClasses} w-12 h-16 md:w-16 md:h-24 text-5xl md:text-7xl m-1 hover:-translate-y-3 cursor-pointer`;
+        // 玩家手牌 (適合觸控點擊)
+        div.className = `${baseClasses} w-9 h-14 text-3xl active:-translate-y-2 transition-transform cursor-pointer`;
         if (type === 'drawn') {
-          div.className += ' ml-4 md:ml-8 animate-pulse border-yellow-400 border-b-[6px]';
+          div.className += ' border-yellow-400 border-b-[4px]'; // 剛摸的牌加亮
         }
       }
 
-      // 中間符號
       const spanChar = document.createElement('span');
       spanChar.className = 'block -mt-1';
       spanChar.textContent = tile.char;
       div.appendChild(spanChar);
 
-      // 右下角小字提示 (非捨棄牌才顯示)
-      if (type !== 'discard') {
-        const spanName = document.createElement('span');
-        spanName.className = 'absolute bottom-1 right-1 text-[10px] text-gray-400 hidden md:block';
-        spanName.textContent = tile.name;
-        div.appendChild(spanName);
-      }
-
-      // 綁定點擊事件
-      if (onClick) {
-        div.onclick = onClick;
-      }
-
+      if (onClick) div.onclick = onClick;
       return div;
     }
 
-    // 統整並更新整個畫面
     function render() {
-      // 1. 更新剩餘牌數
+      // 更新剩餘牌數
       document.getElementById('deck-count').textContent = deck.length;
 
-      // 2. 更新按鈕與提示文字狀態
-      const drawBtn = document.getElementById('draw-btn');
-      const statusText = document.getElementById('status-text');
-      if (drawnTile !== null) {
-        drawBtn.className = "px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all bg-gray-600 text-gray-400 cursor-not-allowed";
-        statusText.textContent = "請點擊一張牌打出 (捨牌)";
-      } else {
-        drawBtn.className = "px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all bg-blue-600 hover:bg-blue-500 text-white cursor-pointer hover:scale-105";
-        statusText.textContent = "請摸牌";
-      }
+      // 更新電腦手牌數量顯示
+      document.getElementById('info-p1').textContent = `南: ${players[1].hand.length}張`;
+      document.getElementById('info-p2').textContent = `西: ${players[2].hand.length}張`;
+      document.getElementById('info-p3').textContent = `北: ${players[3].hand.length}張`;
 
-      // 3. 渲染海底的牌
-      const discardsContainer = document.getElementById('discards-container');
-      discardsContainer.innerHTML = ''; // 清空
-      if (discards.length === 0) {
-        discardsContainer.innerHTML = '<div class="w-full text-center text-emerald-600/50 font-bold text-2xl mt-10">尚無丟棄的牌</div>';
-      } else {
-        discards.forEach(tile => {
-          discardsContainer.appendChild(createTileElement(tile, 'discard', null));
-        });
-      }
-
-      // 4. 渲染 16 張手牌
-      const handContainer = document.getElementById('hand-container');
-      handContainer.innerHTML = ''; // 清空
-      hand.forEach(tile => {
-        handContainer.appendChild(createTileElement(tile, 'hand', () => handleDiscard(tile, 'hand')));
+      // 渲染海底 (Sea)
+      const seaContainer = document.getElementById('sea-container');
+      seaContainer.innerHTML = '';
+      sea.forEach(tile => {
+        seaContainer.appendChild(createTileElement(tile, 'sea', null));
       });
 
-      // 5. 渲染剛摸進的第 17 張牌
+      // 渲染玩家明牌/花牌區
+      const meldsContainer = document.getElementById('player-melds');
+      meldsContainer.innerHTML = '';
+      let p0 = players[0];
+      // 畫出花牌
+      p0.flowers.forEach(tile => {
+        meldsContainer.appendChild(createTileElement(tile, 'flower', null));
+      });
+      // 畫出文字標籤的吃碰
+      p0.melds.forEach(m => {
+        const span = document.createElement('span');
+        span.className = 'bg-emerald-800 border border-emerald-600 px-1 rounded text-xs text-yellow-200 mx-0.5';
+        span.textContent = m;
+        meldsContainer.appendChild(span);
+      });
+
+      // 渲染玩家手牌
+      const handContainer = document.getElementById('hand-container');
+      handContainer.innerHTML = '';
+      p0.hand.forEach(tile => {
+        handContainer.appendChild(createTileElement(tile, 'hand', () => playerDiscard(tile.id, 'hand')));
+      });
+
+      // 渲染剛摸的牌
       const drawnContainer = document.getElementById('drawn-container');
-      drawnContainer.innerHTML = ''; // 清空
-      if (drawnTile) {
-        drawnContainer.classList.add('ml-2', 'md:ml-6', 'pl-2', 'md:pl-6', 'border-l-2');
-        drawnContainer.appendChild(createTileElement(drawnTile, 'drawn', () => handleDiscard(drawnTile, 'drawn')));
+      drawnContainer.innerHTML = '';
+      if (p0.drawnTile) {
+        drawnContainer.appendChild(createTileElement(p0.drawnTile, 'drawn', () => playerDiscard(p0.drawnTile.id, 'drawn')));
+      }
+
+      // 渲染動作按鈕 (吃碰過)
+      const actionBar = document.getElementById('action-bar');
+      const btnPong = document.getElementById('btn-pong');
+      const btnChi = document.getElementById('btn-chi');
+      
+      if (gameState === 'waiting_action') {
+        actionBar.classList.remove('hidden');
+        btnPong.classList.toggle('hidden', !actionOptions.canPong);
+        btnChi.classList.toggle('hidden', !actionOptions.canChi);
       } else {
-        drawnContainer.classList.remove('ml-2', 'md:ml-6', 'pl-2', 'md:pl-6', 'border-l-2');
+        actionBar.classList.add('hidden');
       }
     }
 
-    // 網頁載入完成後，自動開始第一局
+    // 初始化
     window.onload = startNewGame;
 
   </script>
