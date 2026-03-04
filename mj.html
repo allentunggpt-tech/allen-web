@@ -7,7 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { overscroll-behavior-y: none; /* 防止手機瀏覽器下拉重整 */ }
-    .mahjong-tile { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+    
+    /* 修正紅中與麻將牌的字體渲染：移除彩色 Emoji 字體，強制使用符號字體 */
+    .mahjong-tile { 
+      font-family: "Segoe UI Symbol", "Apple Symbols", "Arial Unicode MS", sans-serif; 
+    }
+    
     /* 隱藏捲軸但保留滑動功能 */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -25,7 +30,7 @@
         <div id="info-p2" class="text-gray-400">對家(西): 16張</div>
         <div id="info-p1" class="text-gray-400">下家(南): 16張</div>
       </div>
-      <div class="bg-emerald-700 px-2 py-1 rounded text-yellow-300 font-bold border border-emerald-600">
+      <div class="bg-emerald-700 px-2 py-1 rounded text-yellow-300 font-bold border border-emerald-600 flex-shrink-0">
         剩餘: <span id="deck-count">0</span>
       </div>
     </header>
@@ -44,32 +49,33 @@
 
     <!-- 玩家花牌與吃碰區 (明牌) -->
     <div class="bg-emerald-950/50 p-1 flex items-center h-10 overflow-x-auto hide-scrollbar border-t border-emerald-700/50">
-      <div class="text-[10px] text-emerald-400 mr-2 min-w-max">花牌/明牌:</div>
-      <div id="player-melds" class="flex gap-1"></div>
+      <div class="text-[10px] text-emerald-400 mr-2 min-w-max flex-shrink-0">花牌/明牌:</div>
+      <div id="player-melds" class="flex gap-1 flex-nowrap"></div>
     </div>
 
     <!-- 動作按鈕區 (吃、碰、過) - 預設隱藏 -->
-    <div id="action-bar" class="hidden absolute bottom-28 left-0 w-full bg-black/80 p-3 flex justify-center gap-4 z-50 backdrop-blur-sm">
+    <div id="action-bar" class="hidden absolute bottom-32 left-0 w-full bg-black/80 p-3 flex justify-center gap-4 z-50 backdrop-blur-sm">
       <button onclick="handleAction('pong')" id="btn-pong" class="hidden bg-yellow-600 active:bg-yellow-500 px-6 py-2 rounded-lg font-bold text-xl shadow-[0_4px_0_rgb(161,98,7)]">碰</button>
       <button onclick="handleAction('chi')" id="btn-chi" class="hidden bg-blue-600 active:bg-blue-500 px-6 py-2 rounded-lg font-bold text-xl shadow-[0_4px_0_rgb(37,99,235)]">吃</button>
       <button onclick="handleAction('pass')" class="bg-gray-600 active:bg-gray-500 px-6 py-2 rounded-lg font-bold text-xl shadow-[0_4px_0_rgb(75,85,99)]">過</button>
     </div>
 
     <!-- 底部：玩家手牌區 -->
-    <footer class="bg-emerald-900 pb-6 pt-2 px-1 border-t-[3px] border-emerald-950 relative shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
+    <footer class="bg-emerald-900 pb-6 pt-2 px-2 border-t-[3px] border-emerald-950 relative shadow-[0_-10px_20px_rgba(0,0,0,0.3)] w-full">
       
-      <div class="flex items-end overflow-x-auto hide-scrollbar pb-2 pt-4">
+      <!-- 加入 w-full 確保捲動範圍正確 -->
+      <div class="flex items-end overflow-x-auto hide-scrollbar pb-2 pt-4 w-full">
         <!-- 手牌容器 -->
-        <div id="hand-container" class="flex gap-[1px] pl-1"></div>
+        <div id="hand-container" class="flex gap-[2px]"></div>
         
-        <!-- 剛摸的牌 -->
-        <div class="ml-2 pl-2 border-l border-emerald-700/50 flex">
+        <!-- 剛摸的牌 (給予一點左邊距做區隔) -->
+        <div class="ml-3 pl-2 border-l border-emerald-700/50 flex flex-shrink-0">
           <div id="drawn-container"></div>
         </div>
       </div>
 
       <!-- 控制按鈕 (手機版置於最右下角或浮動) -->
-      <button onclick="startNewGame()" class="absolute top-2 right-2 text-xs bg-emerald-700 px-2 py-1 rounded text-emerald-200 active:bg-emerald-600">重局</button>
+      <button onclick="startNewGame()" class="absolute top-2 right-2 text-xs bg-emerald-700 px-3 py-1.5 rounded text-emerald-100 font-bold active:bg-emerald-600 shadow">重新開局</button>
     </footer>
 
   </div>
@@ -78,12 +84,13 @@
     // ==========================================
     // 1. 定義麻將牌資料
     // ==========================================
+    // 注意：中、發、白後面的 \uFE0E 是強制系統將其顯示為「純文字」而非彩色 Emoji 的關鍵設定！
     const SUITS = [
       { type: '萬', chars: ['🀇','🀈','🀉','🀊','🀋','🀌','🀍','🀎','🀏'], baseWeight: 10 },
       { type: '筒', chars: ['🀙','🀚','🀛','🀜','🀝','🀞','🀟','🀠','🀡'], baseWeight: 20 },
       { type: '索', chars: ['🀐','🀑','🀒','🀓','🀔','🀕','🀖','🀗','🀘'], baseWeight: 30 },
       { type: '風', chars: ['🀀','🀁','🀂','🀃'], names: ['東','南','西','北'], baseWeight: 40 },
-      { type: '箭', chars: ['🀄','🀅','🀆'], names: ['中','發','白'], baseWeight: 50 },
+      { type: '箭', chars: ['🀄\uFE0E','🀅\uFE0E','🀆\uFE0E'], names: ['中','發','白'], baseWeight: 50 },
     ];
     const FLOWERS = ['🀢','🀣','🀤','🀥','🀦','🀧','🀨','🀩'];
 
@@ -215,12 +222,10 @@
     // 電腦自動打牌邏輯 (隨機打出一張)
     function botPlay(botId) {
       let p = players[botId];
-      // 為了簡單，電腦隨機把手牌或剛摸的牌打出去
       let allTiles = [...p.hand, p.drawnTile].filter(t => t !== null);
       let randomIndex = Math.floor(Math.random() * allTiles.length);
       let tileToDiscard = allTiles[randomIndex];
 
-      // 從電腦手牌移除
       if (p.drawnTile && p.drawnTile.id === tileToDiscard.id) {
         p.drawnTile = null;
       } else {
@@ -230,7 +235,6 @@
         p.hand = sortHand(p.hand);
       }
 
-      // 丟到海底並觸發檢查
       processDiscard(tileToDiscard, botId);
     }
 
@@ -279,13 +283,13 @@
       let p = players[0];
       actionOptions = { canPong: false, canChi: false };
       
-      // 檢查碰 (手牌有兩張一樣的)
+      // 檢查碰
       let sameTiles = p.hand.filter(t => t.weight === tile.weight);
       if (sameTiles.length >= 2) {
         actionOptions.canPong = true;
       }
 
-      // 檢查吃 (必須是上家 sourceId === 3 打出的，且是萬筒索)
+      // 檢查吃
       if (sourceId === 3 && ['萬','筒','索'].includes(tile.type)) {
         let w = tile.weight;
         let hasM1 = p.hand.some(t => t.weight === w - 1);
@@ -293,7 +297,6 @@
         let hasP1 = p.hand.some(t => t.weight === w + 1);
         let hasP2 = p.hand.some(t => t.weight === w + 2);
         
-        // 判斷能否湊成順子: (X-2, X-1, [X]) 或 (X-1, [X], X+1) 或 ([X], X+1, X+2)
         if ((hasM2 && hasM1) || (hasM1 && hasP1) || (hasP1 && hasP2)) {
           actionOptions.canChi = true;
         }
@@ -305,7 +308,6 @@
         updateStatus("你要吃或碰嗎？");
         render();
       } else {
-        // 沒有動作可做，繼續下一局
         nextTurn();
       }
     }
@@ -316,32 +318,24 @@
       let p = players[0];
 
       if (actionType === 'pass') {
-        // 放棄吃碰
         gameState = 'idle';
         pendingDiscard = null;
         nextTurn();
         return;
       }
 
-      // 如果選擇碰
       if (actionType === 'pong') {
-        // 從海底拿走那張牌
         let tile = sea.pop(); 
-        
-        // 從手牌找出兩張一樣的移除
         let count = 0;
         p.hand = p.hand.filter(t => {
           if (t.weight === tile.weight && count < 2) {
             count++;
-            return false; // 移除
+            return false;
           }
-          return true; // 保留
+          return true;
         });
-        
-        // 放入明牌區 (melds) 這裡簡化顯示，只推入文字代表碰了什麼
         p.melds.push(`碰${tile.char}`);
         
-        // 輪到玩家打牌 (碰完不能摸牌，直接打)
         currentTurn = 0;
         gameState = 'playing';
         pendingDiscard = null;
@@ -349,11 +343,9 @@
         render();
       }
 
-      // 簡化版的吃：為了避免介面太複雜讓使用者選牌，這裡實作「自動抓最近的兩張牌吃」
       if (actionType === 'chi') {
         let tile = sea.pop();
         let w = tile.weight;
-        // 尋找要搭配的兩張牌 (這裡用非常簡單的貪婪法抓牌)
         let t1, t2;
         let pHandW = p.hand.map(t => t.weight);
         
@@ -361,7 +353,6 @@
         else if (pHandW.includes(w-2) && pHandW.includes(w-1)) { t1=w-2; t2=w-1; }
         else if (pHandW.includes(w+1) && pHandW.includes(w+2)) { t1=w+1; t2=w+2; }
 
-        // 移除被吃掉的牌
         p.hand = p.hand.filter(t => {
           if (t.weight === t1) { t1 = -1; return false; }
           if (t.weight === t2) { t2 = -1; return false; }
@@ -378,14 +369,14 @@
     }
 
     // ==========================================
-    // 4. 畫面渲染邏輯 (UI 專為手機優化)
+    // 4. 畫面渲染邏輯 (優化排版與破版問題)
     // ==========================================
 
     function updateStatus(text) {
       document.getElementById('game-status').textContent = text;
     }
 
-    // 產生麻將牌 DOM (體積縮小以適應手機)
+    // 產生麻將牌 DOM
     function createTileElement(tile, type, onClick) {
       const div = document.createElement('div');
       
@@ -395,18 +386,18 @@
       if (tile.type === '索') textColor = 'text-green-700';
       if (tile.type === '花') textColor = 'text-pink-600';
 
-      // 手機版特化樣式
-      let baseClasses = `mahjong-tile relative flex items-center justify-center bg-[#fdfdfc] border-b-[4px] border-r-[2px] border-[#d4d4d2] rounded shadow select-none ${textColor}`;
+      // 加入 flex-shrink-0 非常重要，確保在手機上牌不會被強制擠壓變形
+      let baseClasses = `mahjong-tile relative flex items-center justify-center bg-[#fdfdfc] border-b-[4px] border-r-[2px] border-[#d4d4d2] rounded shadow select-none flex-shrink-0 ${textColor}`;
 
       if (type === 'sea') {
-        // 海底的牌更小
-        div.className = `${baseClasses} w-7 h-10 text-xl m-[1px] bg-gray-200 border-gray-400`;
+        // 海底的牌稍微縮小
+        div.className = `${baseClasses} w-6 h-8 text-[18px] m-[1px] bg-gray-200 border-gray-400`;
       } else if (type === 'flower') {
         // 花牌區
-        div.className = `${baseClasses} w-6 h-8 text-sm m-[1px]`;
+        div.className = `${baseClasses} w-5 h-7 text-sm m-[1px]`;
       } else {
-        // 玩家手牌 (適合觸控點擊)
-        div.className = `${baseClasses} w-9 h-14 text-3xl active:-translate-y-2 transition-transform cursor-pointer`;
+        // 玩家手牌 (微調寬高與字體，讓畫面能塞下更多，塞不下時維持原狀可滑動)
+        div.className = `${baseClasses} w-8 h-12 text-[22px] sm:w-9 sm:h-14 sm:text-3xl active:-translate-y-2 transition-transform cursor-pointer`;
         if (type === 'drawn') {
           div.className += ' border-yellow-400 border-b-[4px]'; // 剛摸的牌加亮
         }
@@ -448,7 +439,7 @@
       // 畫出文字標籤的吃碰
       p0.melds.forEach(m => {
         const span = document.createElement('span');
-        span.className = 'bg-emerald-800 border border-emerald-600 px-1 rounded text-xs text-yellow-200 mx-0.5';
+        span.className = 'bg-emerald-800 border border-emerald-600 px-1 rounded text-xs text-yellow-200 mx-0.5 flex-shrink-0';
         span.textContent = m;
         meldsContainer.appendChild(span);
       });
