@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台灣麻將16張 - 純JS新手版</title>
+  <!-- 載入 Tailwind CSS 方便快速排版 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 確保麻將牌的特殊符號 (Emoji) 可以正常顯示 */
+    .mahjong-tile {
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-emerald-800 p-4 md:p-8 flex flex-col font-sans text-white">
+
+  <!-- 頂部資訊列 -->
+  <header class="flex justify-between items-center bg-emerald-900 p-4 rounded-xl shadow-lg mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-yellow-400 tracking-wider">台灣麻將 16張</h1>
+      <p class="text-emerald-300 text-sm">純 HTML + JS 開發版</p>
+    </div>
+    <div class="flex gap-4 items-center">
+      <div class="bg-emerald-950 px-4 py-2 rounded text-center">
+        <span class="block text-xs text-emerald-400">牌山剩餘</span>
+        <span id="deck-count" class="text-xl font-mono font-bold">0</span>
+      </div>
+      <button 
+        onclick="startNewGame()"
+        class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-md"
+      >
+        重新開局
+      </button>
+    </div>
+  </header>
+
+  <!-- 海底 (捨棄的牌) -->
+  <div id="discards-container" class="flex-1 bg-emerald-700/30 rounded-xl p-6 border-2 border-emerald-700/50 flex flex-wrap content-start shadow-inner overflow-y-auto min-h-[200px] mb-8">
+    <!-- 捨棄的牌會被 JS 動態塞入這裡 -->
+  </div>
+
+  <!-- 玩家手牌區 -->
+  <div class="bg-emerald-900 p-4 rounded-xl shadow-2xl">
+    
+    <!-- 操作提示列 -->
+    <div class="flex justify-between items-center mb-4 px-2">
+      <div id="status-text" class="text-yellow-300 font-bold animate-bounce">
+        請摸牌
+      </div>
+      <button
+        id="draw-btn"
+        onclick="handleDraw()"
+        class="px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all bg-blue-600 hover:bg-blue-500 text-white cursor-pointer hover:scale-105"
+      >
+        摸牌 (Draw)
+      </button>
+    </div>
+
+    <!-- 手牌展示 -->
+    <div class="flex items-end justify-center flex-wrap md:flex-nowrap">
+      <!-- 基礎 16 張牌 -->
+      <div id="hand-container" class="flex flex-wrap justify-center"></div>
+
+      <!-- 剛摸進的第 17 張牌 -->
+      <div id="drawn-container" class="border-emerald-700 flex"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. 定義麻將牌資料 (跟五子棋定義棋盤陣列很像)
+    // ==========================================
+    const SUITS = [
+      { type: '萬', chars: ['🀇','🀈','🀉','🀊','🀋','🀌','🀍','🀎','🀏'], baseWeight: 10 },
+      { type: '筒', chars: ['🀙','🀚','🀛','🀜','🀝','🀞','🀟','🀠','🀡'], baseWeight: 20 },
+      { type: '索', chars: ['🀐','🀑','🀒','🀓','🀔','🀕','🀖','🀗','🀘'], baseWeight: 30 },
+      { type: '風', chars: ['🀀','🀁','🀂','🀃'], names: ['東','南','西','北'], baseWeight: 40 },
+      { type: '箭', chars: ['🀄','🀅','🀆'], names: ['中','發','白'], baseWeight: 50 },
+    ];
+    const FLOWERS = ['🀢','🀣','🀤','🀥','🀦','🀧','🀨','🀩'];
+
+    // ==========================================
+    // 2. 遊戲狀態變數 (全域變數)
+    // ==========================================
+    let deck = [];        // 牌山
+    let hand = [];        // 玩家手牌 (16張)
+    let drawnTile = null; // 剛摸的牌 (第17張)
+    let discards = [];    // 捨棄的牌 (海底)
+    let gameState = 'idle';
+
+    // ==========================================
+    // 3. 核心邏輯函數
+    // ==========================================
+
+    // 產生 144 張牌並洗牌
+    function createShuffledDeck() {
+      let newDeck = [];
+      let idCounter = 0;
+
+      // 放入基本牌 (每種4張)
+      SUITS.forEach(suit => {
+        suit.chars.forEach((char, index) => {
+          for (let i = 0; i < 4; i++) {
+            newDeck.push({
+              id: idCounter++,
+              char: char,
+              weight: suit.baseWeight + index,
+              type: suit.type,
+              name: suit.names ? suit.names[index] : `${index + 1}${suit.type}`
+            });
+          }
+        });
+      });
+
+      // 放入花牌 (8張)
+      FLOWERS.forEach((char, index) => {
+        newDeck.push({
+          id: idCounter++, char: char, weight: 60 + index, type: '花', name: `花${index + 1}`
+        });
+      });
+
+      // 洗牌演算法
+      for (let i = newDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+      }
+      return newDeck;
+    }
+
+    // 將手牌依照大小排序 (理牌)
+    function sortHand(handArray) {
+      return [...handArray].sort((a, b) => a.weight - b.weight);
+    }
+
+    // 開始新遊戲
+    function startNewGame() {
+      deck = createShuffledDeck();
+      hand = sortHand(deck.splice(0, 16)); // 拿走前16張當底牌
+      drawnTile = deck.shift();            // 莊家多摸一張
+      discards = [];
+      gameState = 'playing';
+      
+      render(); // 更新畫面
+    }
+
+    // 摸牌
+    function handleDraw() {
+      if (drawnTile !== null) {
+        alert("請先打出一張牌！"); return;
+      }
+      if (deck.length === 0) {
+        alert("牌山已經沒牌了（流局）！");
+        gameState = 'gameover';
+        render(); return;
+      }
+      
+      drawnTile = deck.shift();
+      render(); // 更新畫面
+    }
+
+    // 打牌
+    function handleDiscard(tile, source) {
+      if (drawnTile === null || gameState !== 'playing') return;
+
+      // 把打出的牌丟到海底
+      discards.push(tile);
+
+      if (source === 'drawn') {
+        // 如果打出的是剛摸的那張
+        drawnTile = null;
+      } else {
+        // 如果打出的是原本手牌裡的
+        hand = hand.filter(t => t.id !== tile.id); // 從手牌拿掉這張
+        hand.push(drawnTile);                      // 把剛才摸的牌塞進手牌
+        hand = sortHand(hand);                     // 重新理牌
+        drawnTile = null;
+      }
+
+      render(); // 更新畫面
+    }
+
+    // ==========================================
+    // 4. 畫面渲染邏輯 (DOM 操作)
+    // ==========================================
+
+    // 產生單張麻將牌的 HTML 元素
+    function createTileElement(tile, type, onClick) {
+      const div = document.createElement('div');
+      
+      // 決定文字顏色
+      let textColor = 'text-gray-900';
+      if (tile.type === '萬') textColor = 'text-red-700';
+      if (tile.type === '筒') textColor = 'text-blue-800';
+      if (tile.type === '索') textColor = 'text-green-700';
+
+      // 基礎樣式
+      let baseClasses = `mahjong-tile relative flex items-center justify-center bg-[#fdfdfc] border-b-[6px] border-r-[2px] border-[#d4d4d2] rounded-md shadow-md select-none transition-transform duration-100 ${textColor}`;
+
+      // 根據狀態(海底、手牌、剛摸進)設定不同大小和動畫
+      if (type === 'discard') {
+        div.className = `${baseClasses} w-10 h-14 text-4xl m-0.5`;
+      } else {
+        div.className = `${baseClasses} w-12 h-16 md:w-16 md:h-24 text-5xl md:text-7xl m-1 hover:-translate-y-3 cursor-pointer`;
+        if (type === 'drawn') {
+          div.className += ' ml-4 md:ml-8 animate-pulse border-yellow-400 border-b-[6px]';
+        }
+      }
+
+      // 中間符號
+      const spanChar = document.createElement('span');
+      spanChar.className = 'block -mt-1';
+      spanChar.textContent = tile.char;
+      div.appendChild(spanChar);
+
+      // 右下角小字提示 (非捨棄牌才顯示)
+      if (type !== 'discard') {
+        const spanName = document.createElement('span');
+        spanName.className = 'absolute bottom-1 right-1 text-[10px] text-gray-400 hidden md:block';
+        spanName.textContent = tile.name;
+        div.appendChild(spanName);
+      }
+
+      // 綁定點擊事件
+      if (onClick) {
+        div.onclick = onClick;
+      }
+
+      return div;
+    }
+
+    // 統整並更新整個畫面
+    function render() {
+      // 1. 更新剩餘牌數
+      document.getElementById('deck-count').textContent = deck.length;
+
+      // 2. 更新按鈕與提示文字狀態
+      const drawBtn = document.getElementById('draw-btn');
+      const statusText = document.getElementById('status-text');
+      if (drawnTile !== null) {
+        drawBtn.className = "px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all bg-gray-600 text-gray-400 cursor-not-allowed";
+        statusText.textContent = "請點擊一張牌打出 (捨牌)";
+      } else {
+        drawBtn.className = "px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all bg-blue-600 hover:bg-blue-500 text-white cursor-pointer hover:scale-105";
+        statusText.textContent = "請摸牌";
+      }
+
+      // 3. 渲染海底的牌
+      const discardsContainer = document.getElementById('discards-container');
+      discardsContainer.innerHTML = ''; // 清空
+      if (discards.length === 0) {
+        discardsContainer.innerHTML = '<div class="w-full text-center text-emerald-600/50 font-bold text-2xl mt-10">尚無丟棄的牌</div>';
+      } else {
+        discards.forEach(tile => {
+          discardsContainer.appendChild(createTileElement(tile, 'discard', null));
+        });
+      }
+
+      // 4. 渲染 16 張手牌
+      const handContainer = document.getElementById('hand-container');
+      handContainer.innerHTML = ''; // 清空
+      hand.forEach(tile => {
+        handContainer.appendChild(createTileElement(tile, 'hand', () => handleDiscard(tile, 'hand')));
+      });
+
+      // 5. 渲染剛摸進的第 17 張牌
+      const drawnContainer = document.getElementById('drawn-container');
+      drawnContainer.innerHTML = ''; // 清空
+      if (drawnTile) {
+        drawnContainer.classList.add('ml-2', 'md:ml-6', 'pl-2', 'md:pl-6', 'border-l-2');
+        drawnContainer.appendChild(createTileElement(drawnTile, 'drawn', () => handleDiscard(drawnTile, 'drawn')));
+      } else {
+        drawnContainer.classList.remove('ml-2', 'md:ml-6', 'pl-2', 'md:pl-6', 'border-l-2');
+      }
+    }
+
+    // 網頁載入完成後，自動開始第一局
+    window.onload = startNewGame;
+
+  </script>
+</body>
+</html>
