@@ -21,7 +21,8 @@
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="h-screen bg-emerald-900 flex justify-center text-white font-sans overflow-hidden select-none">
+<!-- 使用 h-[100dvh] 解決手機瀏覽器上下工具列遮擋的問題 -->
+<body class="h-[100dvh] bg-emerald-900 flex justify-center text-white font-sans overflow-hidden select-none">
 
   <!-- 開局/轉向提示覆蓋層 -->
   <div id="start-overlay" class="absolute inset-0 z-[100] bg-emerald-950 flex flex-col items-center justify-center text-white p-4 transition-opacity duration-300">
@@ -42,7 +43,7 @@
     </button>
   </div>
 
-  <!-- 遊戲主體容器 (移除 max-w-md，改為全螢幕滿版) -->
+  <!-- 遊戲主體容器 -->
   <div class="w-full bg-emerald-800 h-full flex flex-col relative shadow-2xl">
     
     <!-- 頂部資訊：對手狀態與牌山 -->
@@ -52,14 +53,20 @@
         <div id="info-p2" class="text-gray-400">對家(西): 16張</div>
         <div id="info-p1" class="text-gray-400">下家(南): 16張</div>
       </div>
-      <div class="bg-emerald-700 px-3 py-1 rounded text-yellow-300 font-bold border border-emerald-600 flex-shrink-0">
-        剩餘牌數: <span id="deck-count" class="text-base">0</span>
+      <div class="flex gap-2 items-center">
+        <div class="bg-emerald-700 px-3 py-1 rounded text-yellow-300 font-bold border border-emerald-600 flex-shrink-0">
+          剩餘牌數: <span id="deck-count" class="text-base">0</span>
+        </div>
+        <!-- 重新開局按鈕移至上方，不阻擋手牌 -->
+        <button onclick="startNewGame()" class="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-1 rounded shadow text-xs font-bold active:scale-95 transition-all flex-shrink-0">
+          重新開局
+        </button>
       </div>
     </header>
 
     <!-- 中間：海底 (捨棄的牌) -->
     <main class="flex-1 p-2 overflow-y-auto hide-scrollbar relative bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-700 to-emerald-900">
-      <div id="game-status" class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-20 text-5xl font-black text-white">
+      <div id="game-status" class="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-20 text-5xl md:text-6xl font-black text-white">
         <!-- 背景狀態浮水印 -->
       </div>
       
@@ -75,15 +82,17 @@
       <div id="player-melds" class="flex gap-1 flex-nowrap overflow-x-auto hide-scrollbar"></div>
     </div>
 
-    <!-- 動作按鈕區 (吃、碰、過) - 調整為高度適應橫向 -->
-    <div id="action-bar" class="hidden absolute bottom-24 left-0 w-full bg-black/80 p-3 flex justify-center gap-6 z-50 backdrop-blur-md">
-      <button onclick="handleAction('pong')" id="btn-pong" class="hidden bg-yellow-600 active:bg-yellow-500 px-8 py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(161,98,7)]">碰</button>
-      <button onclick="handleAction('chi')" id="btn-chi" class="hidden bg-blue-600 active:bg-blue-500 px-8 py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(37,99,235)]">吃</button>
-      <button onclick="handleAction('pass')" class="bg-gray-600 active:bg-gray-500 px-8 py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(75,85,99)]">過</button>
+    <!-- 動作按鈕區 (胡、吃、碰、過) -->
+    <div id="action-bar" class="hidden absolute bottom-24 left-0 w-full bg-black/80 p-3 flex justify-center gap-4 md:gap-6 z-50 backdrop-blur-md">
+      <button onclick="handleAction('zimo')" id="btn-zimo" class="hidden bg-red-600 active:bg-red-500 px-6 py-2.5 md:px-8 md:py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(153,27,27)]">自摸</button>
+      <button onclick="handleAction('hu')" id="btn-hu" class="hidden bg-red-600 active:bg-red-500 px-6 py-2.5 md:px-8 md:py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(153,27,27)]">胡</button>
+      <button onclick="handleAction('pong')" id="btn-pong" class="hidden bg-yellow-600 active:bg-yellow-500 px-6 py-2.5 md:px-8 md:py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(161,98,7)]">碰</button>
+      <button onclick="handleAction('chi')" id="btn-chi" class="hidden bg-blue-600 active:bg-blue-500 px-6 py-2.5 md:px-8 md:py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(37,99,235)]">吃</button>
+      <button onclick="handleAction('pass')" class="bg-gray-600 active:bg-gray-500 px-6 py-2.5 md:px-8 md:py-2.5 rounded-xl font-bold text-2xl shadow-[0_4px_0_rgb(75,85,99)]">過</button>
     </div>
 
-    <!-- 底部：玩家手牌區 -->
-    <footer class="bg-emerald-900 pb-3 pt-3 px-1 border-t-[3px] border-emerald-950 relative shadow-[0_-10px_20px_rgba(0,0,0,0.4)] w-full flex-shrink-0">
+    <!-- 底部：玩家手牌區 (增加 pb-4 避免手機底部切齊) -->
+    <footer class="bg-emerald-900 pb-4 pt-3 px-1 border-t-[3px] border-emerald-950 relative shadow-[0_-10px_20px_rgba(0,0,0,0.4)] w-full flex-shrink-0">
       
       <!-- 控制手牌絕對置中且不換行 -->
       <div class="flex items-end justify-center w-full">
@@ -95,9 +104,6 @@
           <div id="drawn-container"></div>
         </div>
       </div>
-
-      <!-- 控制按鈕 -->
-      <button onclick="startNewGame()" class="absolute top-2 right-3 text-xs md:text-sm bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded text-emerald-100 font-bold shadow transition-colors">重新開局</button>
     </footer>
 
   </div>
@@ -131,13 +137,12 @@
     let currentTurn = 0; 
     let gameState = 'idle'; 
     let pendingDiscard = null; 
-    let actionOptions = { canPong: false, canChi: false };
+    let actionOptions = { canPong: false, canChi: false, canHu: false, canZimo: false };
 
     // ==========================================
     // 3. 核心邏輯
     // ==========================================
 
-    // 關閉提示遮罩並開始遊戲
     function startGameUI() {
       document.getElementById('start-overlay').classList.add('hidden');
       if (gameState === 'idle') {
@@ -151,7 +156,7 @@
       SUITS.forEach(suit => {
         suit.chars.forEach((char, index) => {
           for (let i = 0; i < 4; i++) {
-            newDeck.push({ id: idCounter++, char, weight: suit.baseWeight + index, type: suit.type, value: index + 1 });
+            newDeck.push({ id: idCounter++, char, weight: suit.baseWeight + index, type: suit.type, name: suit.names ? suit.names[index] : '', value: index + 1 });
           }
         });
       });
@@ -189,6 +194,94 @@
       p.hand = sortHand(p.hand);
     }
 
+    // ==========================================
+    // ★ 判斷胡牌演算法 (回溯法)
+    // ==========================================
+    function checkWin(handTiles, drawnOrDiscardedTile) {
+      let allTiles = [...handTiles];
+      if (drawnOrDiscardedTile) allTiles.push(drawnOrDiscardedTile);
+
+      // 檢查總牌數是否符合胡牌公式：3n + 2 (包含明牌的話，手牌數量應為 17, 14, 11, 8, 5, 2)
+      if (allTiles.length % 3 !== 2) return false;
+      let neededMelds = Math.floor(allTiles.length / 3);
+
+      // 計算各張牌的數量 (使用 weight 作為 ID)
+      let counts = {};
+      allTiles.forEach(t => {
+        counts[t.weight] = (counts[t.weight] || 0) + 1;
+      });
+
+      let uniqueWeights = Object.keys(counts).map(Number);
+
+      // 遞迴檢查是否能湊成全部的搭子 (刻子 AAA 或 順子 ABC)
+      function checkMelds(currentCounts, needed) {
+        if (needed === 0) return true;
+
+        let firstWeight = uniqueWeights.find(w => currentCounts[w] > 0);
+        if (!firstWeight) return false;
+
+        // 嘗試組刻子 (AAA)
+        if (currentCounts[firstWeight] >= 3) {
+          currentCounts[firstWeight] -= 3;
+          if (checkMelds(currentCounts, needed - 1)) {
+            currentCounts[firstWeight] += 3; // 復原
+            return true;
+          }
+          currentCounts[firstWeight] += 3;
+        }
+
+        // 嘗試組順子 (ABC) - 僅限萬(10~18)、筒(20~28)、索(30~38)，且不能跨花色
+        if (firstWeight < 40) {
+          if (currentCounts[firstWeight] > 0 && 
+              currentCounts[firstWeight + 1] > 0 && 
+              currentCounts[firstWeight + 2] > 0) {
+            
+            currentCounts[firstWeight]--;
+            currentCounts[firstWeight + 1]--;
+            currentCounts[firstWeight + 2]--;
+
+            if (checkMelds(currentCounts, needed - 1)) {
+              currentCounts[firstWeight]++;
+              currentCounts[firstWeight + 1]++;
+              currentCounts[firstWeight + 2]++;
+              return true;
+            }
+
+            currentCounts[firstWeight]++;
+            currentCounts[firstWeight + 1]++;
+            currentCounts[firstWeight + 2]++;
+          }
+        }
+        return false;
+      }
+
+      // 尋找並嘗試將每一對牌當作「將眼(對子)」
+      for (let i = 0; i < uniqueWeights.length; i++) {
+        let w = uniqueWeights[i];
+        if (counts[w] >= 2) {
+          counts[w] -= 2; // 取出對子
+          if (checkMelds(counts, neededMelds)) {
+            counts[w] += 2; // 復原
+            return true; // 胡牌！
+          }
+          counts[w] += 2; // 復原
+        }
+      }
+      return false;
+    }
+
+    // 檢查玩家是否可以自摸
+    function checkPlayerZimo() {
+      if (checkWin(players[0].hand, players[0].drawnTile)) {
+        gameState = 'waiting_zimo';
+        actionOptions = { canPong: false, canChi: false, canHu: false, canZimo: true };
+        updateStatus("自摸！要胡牌嗎？");
+        render();
+        return true;
+      }
+      return false;
+    }
+
     function startNewGame() {
       deck = createShuffledDeck();
       sea = [];
@@ -205,9 +298,12 @@
       players[0].drawnTile = deck.shift();
       processFlowers(0);
 
-      gameState = 'playing';
-      updateStatus("輪到你出牌");
-      render();
+      // 檢查開局是否天胡 / 自摸
+      if (!checkPlayerZimo()) {
+        gameState = 'playing';
+        updateStatus("輪到你出牌");
+        render();
+      }
     }
 
     function nextTurn() {
@@ -225,9 +321,11 @@
       processFlowers(currentTurn);
 
       if (currentTurn === 0) {
-        gameState = 'playing';
-        updateStatus("輪到你出牌");
-        render();
+        if (!checkPlayerZimo()) {
+          gameState = 'playing';
+          updateStatus("輪到你出牌");
+          render();
+        }
       } else {
         updateStatus(`${p.name} 思考中...`);
         render();
@@ -236,6 +334,7 @@
     }
 
     function botPlay(botId) {
+      if (gameState === 'gameover') return;
       let p = players[botId];
       let allTiles = [...p.hand, p.drawnTile].filter(t => t !== null);
       let randomIndex = Math.floor(Math.random() * allTiles.length);
@@ -289,11 +388,18 @@
 
     function checkPlayerActions(tile, sourceId) {
       let p = players[0];
-      actionOptions = { canPong: false, canChi: false };
+      actionOptions = { canPong: false, canChi: false, canHu: false, canZimo: false };
       
+      // 1. 檢查胡牌 (包含別人打的牌)
+      if (checkWin(p.hand, tile)) {
+        actionOptions.canHu = true;
+      }
+
+      // 2. 檢查碰
       let sameTiles = p.hand.filter(t => t.weight === tile.weight);
       if (sameTiles.length >= 2) actionOptions.canPong = true;
 
+      // 3. 檢查吃 (限定上家)
       if (sourceId === 3 && ['萬','筒','索'].includes(tile.type)) {
         let w = tile.weight;
         let hasM1 = p.hand.some(t => t.weight === w - 1);
@@ -305,10 +411,11 @@
         }
       }
 
-      if (actionOptions.canPong || actionOptions.canChi) {
+      if (actionOptions.canHu || actionOptions.canPong || actionOptions.canChi) {
         gameState = 'waiting_action';
         pendingDiscard = tile;
-        updateStatus("吃、碰、還是過？");
+        let msg = actionOptions.canHu ? "可以胡牌！" : "吃、碰、還是過？";
+        updateStatus(msg);
         render();
       } else {
         nextTurn();
@@ -316,13 +423,39 @@
     }
 
     function handleAction(actionType) {
-      if (gameState !== 'waiting_action') return;
+      if (gameState !== 'waiting_action' && gameState !== 'waiting_zimo') return;
       let p = players[0];
 
       if (actionType === 'pass') {
+        if (gameState === 'waiting_zimo') {
+          // 放棄自摸，回歸打牌狀態
+          gameState = 'playing';
+          updateStatus("輪到你出牌");
+          render();
+          return;
+        }
         gameState = 'idle';
         pendingDiscard = null;
         nextTurn();
+        return;
+      }
+
+      // 處理自摸
+      if (actionType === 'zimo') {
+        gameState = 'gameover';
+        updateStatus("🎊 恭喜！你自摸了！ 🎊");
+        render();
+        return;
+      }
+
+      // 處理胡牌
+      if (actionType === 'hu') {
+        let tile = sea.pop(); // 把海底那張致勝牌拿回來展示
+        p.hand.push(tile);
+        p.hand = sortHand(p.hand);
+        gameState = 'gameover';
+        updateStatus("🎊 恭喜！你胡牌了！ 🎊");
+        render();
         return;
       }
 
@@ -381,27 +514,28 @@
       if (tile.type === '筒') textColor = 'text-blue-800';
       if (tile.type === '索') textColor = 'text-green-700';
       if (tile.type === '花') textColor = 'text-pink-600';
+      
+      // ★ 特別指定「紅中」與「綠發」的顏色
+      if (tile.type === '箭') {
+        if (tile.name === '中') textColor = 'text-red-600';
+        if (tile.name === '發') textColor = 'text-green-600';
+      }
 
       // 基礎共用屬性
       let baseClasses = `mahjong-tile relative flex items-center justify-center bg-[#fdfdfc] border-b-[4px] border-r-[2px] border-[#d4d4d2] rounded select-none flex-shrink-0 ${textColor}`;
 
       if (type === 'sea') {
-        // 海底的牌
         div.className = `${baseClasses} w-[4vw] h-[5.5vw] max-w-[32px] max-h-[46px] m-[1px] bg-gray-200 border-gray-400 shadow-sm`;
       } else if (type === 'flower') {
-        // 花牌區
         div.className = `${baseClasses} w-[3.5vw] h-[4.8vw] max-w-[28px] max-h-[40px] m-[1px] shadow-sm`;
       } else {
-        // 玩家手牌：使用相對寬度 vw 計算，100vw / 19張牌的空間約等於 5vw，保證絕對不會超過螢幕
         div.className = `${baseClasses} w-[5vw] h-[7.3vw] max-w-[65px] max-h-[95px] shadow-md hover:-translate-y-2 active:-translate-y-3 transition-transform cursor-pointer`;
         if (type === 'drawn') {
           div.className += ' border-yellow-400 border-b-[4px] -translate-y-1';
         }
       }
 
-      // 針對文字極致放大填滿：使用 scale，並利用 w-full h-full 確保置中
       const spanChar = document.createElement('span');
-      // 根據牌的類型給予不同的放大倍率與字體大小基底
       let scaleClass = type === 'sea' || type === 'flower' ? 'scale-[1.2] text-xl md:text-2xl' : 'scale-[1.3] text-[4.5vw] md:text-5xl';
       spanChar.className = `block flex items-center justify-center w-full h-full leading-none transform ${scaleClass}`;
       spanChar.textContent = tile.char;
@@ -448,14 +582,14 @@
         drawnContainer.appendChild(createTileElement(p0.drawnTile, 'drawn', () => playerDiscard(p0.drawnTile.id, 'drawn')));
       }
 
+      // 控制動作按鈕顯示與隱藏
       const actionBar = document.getElementById('action-bar');
-      const btnPong = document.getElementById('btn-pong');
-      const btnChi = document.getElementById('btn-chi');
-      
-      if (gameState === 'waiting_action') {
+      if (gameState === 'waiting_action' || gameState === 'waiting_zimo') {
         actionBar.classList.remove('hidden');
-        btnPong.classList.toggle('hidden', !actionOptions.canPong);
-        btnChi.classList.toggle('hidden', !actionOptions.canChi);
+        document.getElementById('btn-hu').classList.toggle('hidden', !actionOptions.canHu);
+        document.getElementById('btn-zimo').classList.toggle('hidden', !actionOptions.canZimo);
+        document.getElementById('btn-pong').classList.toggle('hidden', !actionOptions.canPong);
+        document.getElementById('btn-chi').classList.toggle('hidden', !actionOptions.canChi);
       } else {
         actionBar.classList.add('hidden');
       }
