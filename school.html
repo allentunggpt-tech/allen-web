@@ -8,7 +8,6 @@
     <meta property="og:title" content="健行科大資管4甲-學士服統計系統" />
     <meta property="og:description" content="資管4甲學士服團購尺寸統計，請同學盡速填寫！" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="preview.jpg" />
     
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -53,7 +52,7 @@
         //  設定區域
         // ==========================================
         // ★★★ 請將下方的引號內容替換成您部署後的「Google Apps Script 網頁應用程式網址」 ★★★
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Qi34i8NdTE9GSRClb5mmgvdEZQ72TFYWcMk1ylYVM8cxMWW5tqGYoxHkbdy9oOGpOg/exec";
+        const GOOGLE_SCRIPT_URL = "請將這裡替換成您的_Google_Apps_Script_URL";
         
         const { useState, useEffect } = React;
 
@@ -211,7 +210,7 @@
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1.5">學號 <span className="text-red-500">*</span></label>
-                                    <input required type="text" name="studentId" value={formData.studentId} onChange={handleChange} placeholder="如：C11433000" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-900 focus:border-blue-900 focus:outline-none transition-shadow bg-white" />
+                                    <input required type="text" name="studentId" value={formData.studentId} onChange={handleChange} placeholder="如：A10912345" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-900 focus:border-blue-900 focus:outline-none transition-shadow bg-white" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1.5">姓名 <span className="text-red-500">*</span></label>
@@ -275,7 +274,7 @@
                                 
                                 {/* 假領子參考圖片 */}
                                 <div className="w-full md:w-48 bg-white border border-gray-200 rounded-xl p-2 flex flex-col justify-center items-center">
-                                    <img src="002.jpg" alt="假領子實拍" className="w-full h-auto max-h-32 object-contain rounded-lg" onError={(e) => { e.target.style.display = 'none' }} />
+                                    <img src="假領子.jpg" alt="假領子實拍" className="w-full h-auto max-h-32 object-contain rounded-lg" onError={(e) => { e.target.style.display = 'none' }} />
                                     <span className="text-xs text-gray-400 mt-2">▲ 假領子參考圖</span>
                                 </div>
                             </div>
@@ -303,7 +302,7 @@
                     <div className="text-center mb-6">
                         <div className="bg-blue-50 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-blue-900"><Icons.Lock className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-gray-800">管理員登入</h2>
-                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼</p>
+                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼 (預設: admin888)</p>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <input type="password" placeholder="請輸入密碼" className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none transition text-lg" value={password} onChange={(e) => { setPassword(e.target.value); setError(false); }} />
@@ -342,7 +341,7 @@
                 setConfirmDialog({
                     message: `確定要刪除「${name}」的登記資料嗎？此操作無法還原。`,
                     onConfirm: () => {
-                        onAction('delete', { userId: id });
+                        onAction({ action: 'delete', userId: id });
                         setConfirmDialog(null);
                     }
                 });
@@ -561,13 +560,14 @@
                                             <h3 className="text-xl md:text-2xl font-bold text-yellow-400 mb-4">學士服團體租購統計</h3>
                                             <p className="text-blue-100 text-sm md:text-base max-w-lg mx-auto">
                                                 各位同學好，若有意願參加畢業典禮學士服團體購買，請協助填寫您的尺寸與加購意願，此統計為先計算數量，以利於後續和廠商談，感謝配合！
-目前價格尚未確認，預估學士服含領帶約$240、假領子約$50                                            </p>
+目前價格尚未確認，預估學士服含領帶約$240、假領子約$50 
+                                            </p>
                                         </div>
                                     </div>
                                     
                                     {/* 插入學士服參考圖 */}
                                     <div className="max-w-md mx-auto bg-white p-2 rounded-xl shadow-sm border border-gray-100 fade-in">
-                                        <img src="001.jpg" alt="學士服樣式參考" className="w-full h-auto rounded-lg object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                                        <img src="學士服.jpg" alt="學士服樣式參考" className="w-full h-auto rounded-lg object-cover" onError={(e) => { e.target.style.display = 'none' }} />
                                         <p className="text-center text-gray-500 text-xs mt-2 font-medium">▲ 健行科大學士服樣式參考</p>
                                     </div>
                                 </div>
