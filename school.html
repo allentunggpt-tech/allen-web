@@ -52,7 +52,7 @@
         //  設定區域
         // ==========================================
         // ★★★ 請將下方的引號內容替換成您部署後的「Google Apps Script 網頁應用程式網址」 ★★★
-        const GOOGLE_SCRIPT_URL = "請將這裡替換成您的_Google_Apps_Script_URL";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Qi34i8NdTE9GSRClb5mmgvdEZQ72TFYWcMk1ylYVM8cxMWW5tqGYoxHkbdy9oOGpOg/exec";
         
         const { useState, useEffect } = React;
 
@@ -210,7 +210,7 @@
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1.5">學號 <span className="text-red-500">*</span></label>
-                                    <input required type="text" name="studentId" value={formData.studentId} onChange={handleChange} placeholder="如：A10912345" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-900 focus:border-blue-900 focus:outline-none transition-shadow bg-white" />
+                                    <input required type="text" name="studentId" value={formData.studentId} onChange={handleChange} placeholder="如：C11433100" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-900 focus:border-blue-900 focus:outline-none transition-shadow bg-white" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1.5">姓名 <span className="text-red-500">*</span></label>
@@ -274,7 +274,7 @@
                                 
                                 {/* 假領子參考圖片 */}
                                 <div className="w-full md:w-48 bg-white border border-gray-200 rounded-xl p-2 flex flex-col justify-center items-center">
-                                    <img src="假領子.jpg" alt="假領子實拍" className="w-full h-auto max-h-32 object-contain rounded-lg" onError={(e) => { e.target.style.display = 'none' }} />
+                                    <img src="002.jpg" alt="假領子實拍" className="w-full h-auto max-h-32 object-contain rounded-lg" onError={(e) => { e.target.style.display = 'none' }} />
                                     <span className="text-xs text-gray-400 mt-2">▲ 假領子參考圖</span>
                                 </div>
                             </div>
@@ -567,7 +567,7 @@
                                     
                                     {/* 插入學士服參考圖 */}
                                     <div className="max-w-md mx-auto bg-white p-2 rounded-xl shadow-sm border border-gray-100 fade-in">
-                                        <img src="學士服.jpg" alt="學士服樣式參考" className="w-full h-auto rounded-lg object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                                        <img src="001.jpg" alt="學士服樣式參考" className="w-full h-auto rounded-lg object-cover" onError={(e) => { e.target.style.display = 'none' }} />
                                         <p className="text-center text-gray-500 text-xs mt-2 font-medium">▲ 健行科大學士服樣式參考</p>
                                     </div>
                                 </div>
