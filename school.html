@@ -8,6 +8,8 @@
     <meta property="og:title" content="健行科大資管4甲-學士服統計系統" />
     <meta property="og:description" content="資管4甲學士服團購尺寸統計，請同學盡速填寫！" />
     <meta property="og:type" content="website" />
+    <!-- 加入 LINE / FB 縮圖預覽 -->
+    <meta property="og:image" content="preview.jpg" />
     
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -51,7 +53,6 @@
         // ==========================================
         //  設定區域
         // ==========================================
-        // ★★★ 請將下方的引號內容替換成您部署後的「Google Apps Script 網頁應用程式網址」 ★★★
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Qi34i8NdTE9GSRClb5mmgvdEZQ72TFYWcMk1ylYVM8cxMWW5tqGYoxHkbdy9oOGpOg/exec";
         
         const { useState, useEffect } = React;
@@ -120,7 +121,7 @@
                         <h1 className="text-lg md:text-xl font-bold tracking-wider truncate">健行科大資管4甲</h1>
                     </div>
                     <nav className="flex gap-2">
-                        <button onClick={() => setView('form')} className={`btn-icon text-xs md:text-sm px-3 py-2 rounded-md transition gap-1.5 whitespace-nowrap active:scale-95 ${view==='form' ? 'bg-blue-800 text-yellow-400' : 'hover:bg-blue-800'}`}>
+                        <button onClick={() => setView('form')} className={`btn-icon text-xs md:text-sm px-3 py-2 rounded-md transition gap-1.5 whitespace-nowrap active:scale-95 ${(view==='form' || view==='list') ? 'bg-blue-800 text-yellow-400' : 'hover:bg-blue-800'}`}>
                             <Icons.User className="w-4 h-4" /> 填寫統計
                         </button>
                         <button onClick={() => setView('admin')} className={`btn-icon text-xs md:text-sm px-3 py-2 rounded-md transition gap-1.5 whitespace-nowrap active:scale-95 ${view==='admin' ? 'bg-blue-800 text-yellow-400' : 'hover:bg-blue-800'}`}>
@@ -131,7 +132,7 @@
             </header>
         );
 
-        const RegistrationForm = ({ onSubmit, isSubmitting, showMessage, currentCount }) => {
+        const RegistrationForm = ({ onSubmit, isSubmitting, showMessage, currentCount, setView }) => {
             const [formData, setFormData] = useState({ 
                 studentId: '', 
                 name: '', 
@@ -196,8 +197,13 @@
                             <Icons.GraduationCap className="text-blue-900 w-7 h-7" /> 
                             學士服登記表單
                         </h2>
-                        <div className="text-sm bg-blue-50 text-blue-800 px-3 py-1.5 rounded-lg border border-blue-100 font-bold shadow-sm">
-                            目前已登記人數：{currentCount || 0} 人
+                        <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setView('list')} className="text-sm bg-blue-100 text-blue-900 hover:bg-blue-200 px-3 py-1.5 rounded-lg border border-blue-200 font-bold shadow-sm transition-colors flex items-center gap-1 active:scale-95">
+                                <Icons.User className="w-4 h-4" /> 查看名單
+                            </button>
+                            <div className="text-sm bg-blue-50 text-blue-800 px-3 py-1.5 rounded-lg border border-blue-100 font-bold shadow-sm">
+                                目前已登記人數：{currentCount || 0} 人
+                            </div>
                         </div>
                     </div>
                     
@@ -435,6 +441,61 @@
             );
         };
 
+        const PublicList = ({ registrations, setView }) => {
+            return (
+                <div className="mt-2 md:mt-6 fade-in pb-10 flex-grow">
+                    <div className="flex flex-col gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200 mx-2 md:mx-0 mb-4">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <Icons.User className="w-6 h-6 text-blue-900" /> 已登記名單
+                            </h2>
+                            <button onClick={() => setView('form')} className="btn-icon bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95">
+                                返回表單
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 mx-2 md:mx-0">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">學號</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">姓名</th>
+                                        <th className="px-5 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">尺寸</th>
+                                        <th className="px-5 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">假領子</th>
+                                        <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">登記時間</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {registrations.length === 0 ? 
+                                        <tr><td colSpan="5" className="text-center py-10 text-gray-400">目前尚無登記資料</td></tr> :
+                                        registrations.map((reg) => (
+                                        <tr key={reg.userId} className="hover:bg-blue-50/50 transition">
+                                            <td className="px-5 py-4 whitespace-nowrap text-gray-600 font-mono">{reg.studentId}</td>
+                                            <td className="px-5 py-4 whitespace-nowrap font-bold text-gray-900">{reg.name}</td>
+                                            <td className="px-5 py-4 whitespace-nowrap text-center">
+                                                <span className="bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-md">{reg.size}</span>
+                                            </td>
+                                            <td className="px-5 py-4 whitespace-nowrap text-center">
+                                                {reg.addCollar ? 
+                                                    <span className="text-green-600 font-bold flex justify-center items-center gap-1"><Icons.CheckCircle className="w-4 h-4"/> 加購</span> : 
+                                                    <span className="text-gray-400">-</span>
+                                                }
+                                            </td>
+                                            <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(reg.timestamp).toLocaleString('zh-TW', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const App = () => {
             const [view, setView] = useState('form');
             const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -559,8 +620,8 @@
                                             <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-wide">🎓 健行科大資管系 4甲</h2>
                                             <h3 className="text-xl md:text-2xl font-bold text-yellow-400 mb-4">學士服團體租購統計</h3>
                                             <p className="text-blue-100 text-sm md:text-base max-w-lg mx-auto">
-                                                各位同學好，若有意願參加畢業典禮學士服團體購買，請協助填寫您的尺寸與加購意願，此統計為先計算數量，以利於後續和廠商談，感謝配合！
-目前價格尚未確認，預估學士服含領帶約$240、假領子約$50 
+                                                各位同學好，若有意願參加畢業典禮學士服團體購買，請協助填寫您的尺寸與加購意願，此統計為先計算數量，以利於後續和廠商談，感謝配合！<br />
+                                                目前價格尚未確認，預估學士服含領帶約$240、假領子約$50 
                                             </p>
                                         </div>
                                     </div>
@@ -583,9 +644,14 @@
                                         isSubmitting={isSubmitting} 
                                         showMessage={showMessage} 
                                         currentCount={registrations.length}
+                                        setView={setView}
                                     />
                                 )}
                             </>
+                        )}
+
+                        {view === 'list' && (
+                            <PublicList registrations={registrations} setView={setView} />
                         )}
                         
                         {/* 彈窗渲染區 */}
