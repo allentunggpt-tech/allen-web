@@ -6,7 +6,7 @@
     <title>健行科大資管4甲-學士服統計系統</title>
     
     <meta property="og:title" content="健行科大資管4甲-學士服統計系統" />
-    <meta property="og:description" content="資管4甲學士服團購/租借尺寸統計，請同學盡速填寫！" />
+    <meta property="og:description" content="資管4甲學士服團購尺寸統計，請同學盡速填寫！" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="preview.jpg" />
     
@@ -211,7 +211,7 @@
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1.5">學號 <span className="text-red-500">*</span></label>
-                                    <input required type="text" name="studentId" value={formData.studentId} onChange={handleChange} placeholder="如：A10912345" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-900 focus:border-blue-900 focus:outline-none transition-shadow bg-white" />
+                                    <input required type="text" name="studentId" value={formData.studentId} onChange={handleChange} placeholder="如：C11433000" className="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-900 focus:border-blue-900 focus:outline-none transition-shadow bg-white" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1.5">姓名 <span className="text-red-500">*</span></label>
@@ -303,7 +303,7 @@
                     <div className="text-center mb-6">
                         <div className="bg-blue-50 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-blue-900"><Icons.Lock className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-gray-800">管理員登入</h2>
-                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼 (預設: admin888)</p>
+                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼</p>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <input type="password" placeholder="請輸入密碼" className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none transition text-lg" value={password} onChange={(e) => { setPassword(e.target.value); setError(false); }} />
@@ -560,8 +560,8 @@
                                             <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-wide">🎓 健行科大資管系 4甲</h2>
                                             <h3 className="text-xl md:text-2xl font-bold text-yellow-400 mb-4">學士服團體租購統計</h3>
                                             <p className="text-blue-100 text-sm md:text-base max-w-lg mx-auto">
-                                                各位同學好，為了加速畢業典禮學士服的租借與購買作業，請盡速填寫您的尺寸與加購意願，感謝配合！
-                                            </p>
+                                                各位同學好，若有意願參加畢業典禮學士服團體購買，請協助填寫您的尺寸與加購意願，此統計為先計算數量，以利於後續和廠商談，感謝配合！
+目前價格尚未確認，預估學士服含領帶約$240、假領子約$50                                            </p>
                                         </div>
                                     </div>
                                     
