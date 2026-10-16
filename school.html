@@ -183,11 +183,11 @@
                 </div>
             );
 
+            // 更新尺寸表
             const sizes = [
-                { id: 'S', label: 'S', desc: '適合 160cm 以下' },
-                { id: 'M', label: 'M', desc: '適合 160cm ~ 170cm' },
-                { id: 'L', label: 'L', desc: '適合 170cm ~ 180cm' },
-                { id: 'XL', label: 'XL', desc: '適合 180cm 以上' }
+                { id: 'S', label: 'S', desc: '身高 150-165cm / 體重 65kg 內' },
+                { id: 'M', label: 'M', desc: '身高 166-175cm / 體重 90kg 內' },
+                { id: 'L', label: 'L', desc: '身高 176-195cm / 體重 120kg 內' }
             ];
 
             return (
@@ -230,23 +230,21 @@
                             <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2 text-lg">
                                 <span className="w-1.5 h-5 bg-yellow-500 rounded-full block"></span> 學士服尺寸 <span className="text-red-500">*</span>
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 {sizes.map((s) => (
                                     <label key={s.id} className="relative cursor-pointer">
                                         <input type="radio" name="size" value={s.id} checked={formData.size === s.id} onChange={handleChange} className="peer sr-only radio-card" />
-                                        <div className="p-4 border-2 border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition-all flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="bg-gray-100 p-2 rounded-full text-gray-600 peer-checked:text-blue-900">
+                                        <div className="p-4 border-2 border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition-all flex flex-col items-start justify-center h-full">
+                                            <div className="flex items-center gap-3 w-full mb-2">
+                                                <div className="bg-gray-100 p-2 rounded-full text-gray-600 peer-checked:text-blue-900 flex-shrink-0">
                                                     <Icons.Shirt className="w-6 h-6" />
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-lg text-gray-800">{s.id} 號</div>
-                                                    <div className="text-sm text-gray-500">{s.desc}</div>
+                                                <div className="font-bold text-xl text-gray-800">{s.id}</div>
+                                                <div className="check-icon opacity-0 transform scale-50 transition-all duration-200 text-blue-900 ml-auto">
+                                                    <Icons.CheckCircle className="w-6 h-6" />
                                                 </div>
                                             </div>
-                                            <div className="check-icon opacity-0 transform scale-50 transition-all duration-200 text-blue-900">
-                                                <Icons.CheckCircle className="w-6 h-6" />
-                                            </div>
+                                            <div className="text-sm text-gray-500">{s.desc}</div>
                                         </div>
                                     </label>
                                 ))}
@@ -308,7 +306,7 @@
                     <div className="text-center mb-6">
                         <div className="bg-blue-50 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-blue-900"><Icons.Lock className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-gray-800">管理員登入</h2>
-                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼</p>
+                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼 (預設: admin888)</p>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <input type="password" placeholder="請輸入密碼" className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none transition text-lg" value={password} onChange={(e) => { setPassword(e.target.value); setError(false); }} />
@@ -320,12 +318,12 @@
         };
 
         const AdminDashboard = ({ registrations, onLogout, onAction, showMessage, setConfirmDialog }) => {
-            // 統計各尺寸數量與領結數量
+            // 統計各尺寸數量與領結數量 (只保留 S, M, L)
             const stats = registrations.reduce((acc, curr) => {
                 if (curr.size) acc[curr.size] = (acc[curr.size] || 0) + 1;
                 if (curr.addCollar) acc.collar += 1;
                 return acc;
-            }, { S: 0, M: 0, L: 0, XL: 0, collar: 0 });
+            }, { S: 0, M: 0, L: 0, collar: 0 });
 
             const exportToCSV = () => {
                 let csvContent = "\uFEFF序號,登記時間,學號,姓名,尺寸,假領子加購\n";
@@ -373,7 +371,6 @@
                                 <div>S: <span className="text-blue-600">{stats.S}</span></div>
                                 <div>M: <span className="text-blue-600">{stats.M}</span></div>
                                 <div>L: <span className="text-blue-600">{stats.L}</span></div>
-                                <div>XL: <span className="text-blue-600">{stats.XL}</span></div>
                             </div>
                         </div>
                     </div>
@@ -514,9 +511,9 @@
                     // 若尚未設定網址，載入一些測試用假資料，以便預覽效果
                     setTimeout(() => {
                         setRegistrations([
-                            { userId: 'u1', studentId: 'A10912001', name: '王大明', size: 'L', addCollar: true, timestamp: new Date(Date.now() - 86400000).toISOString() },
-                            { userId: 'u2', studentId: 'A10912002', name: '林小美', size: 'S', addCollar: false, timestamp: new Date(Date.now() - 3600000).toISOString() },
-                            { userId: 'u3', studentId: 'A10912003', name: '陳建宏', size: 'XL', addCollar: true, timestamp: new Date().toISOString() },
+                            { userId: 'u1', studentId: 'C11433101', name: '王大明', size: 'L', addCollar: true, timestamp: new Date(Date.now() - 86400000).toISOString() },
+                            { userId: 'u2', studentId: 'C11433102', name: '林小美', size: 'S', addCollar: false, timestamp: new Date(Date.now() - 3600000).toISOString() },
+                            { userId: 'u3', studentId: 'C11433103', name: '陳建宏', size: 'M', addCollar: true, timestamp: new Date().toISOString() },
                         ]);
                         setIsLoadingData(false);
                     }, 800);
@@ -619,13 +616,14 @@
                                         <div className="relative z-10">
                                             <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-wide">🎓 健行科大資管系 4甲</h2>
                                             <h3 className="text-xl md:text-2xl font-bold text-yellow-400 mb-4">學士服團體租購統計</h3>
+                                            
                                             <div className="text-blue-100 text-sm md:text-base max-w-lg mx-auto">
                                                 <p className="mb-4 leading-relaxed">
                                                     各位同學好，若有意願參加畢業典禮學士服團體購買，請協助填寫您的尺寸與加購意願，此統計為先計算數量，以利於後續和廠商談，感謝配合！
                                                 </p>
                                                 <div className="bg-blue-800/60 rounded-xl p-3 inline-block border border-blue-700 shadow-sm text-yellow-50">
-                                                    目前價格尚未確認<br />
-                                                    預估學士服含領帶約$240、假領子約$50
+                                                    學士服(含領帶) 確認售價：$269<br />
+                                                    加購假領子 確認售價：$30
                                                 </div>
                                             </div>
                                         </div>
