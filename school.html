@@ -225,6 +225,7 @@
                             </div>
                         </div>
 
+                        {}
                         {/* 尺寸選擇區塊 */}
                         <div className="bg-gray-50 p-5 border border-gray-200 rounded-xl">
                             <h3 className="font-bold text-gray-700 mb-4 flex items-center gap-2 text-lg">
@@ -306,7 +307,7 @@
                     <div className="text-center mb-6">
                         <div className="bg-blue-50 p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-blue-900"><Icons.Lock className="w-8 h-8" /></div>
                         <h2 className="text-xl font-bold text-gray-800">管理員登入</h2>
-                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼 (預設: admin888)</p>
+                        <p className="text-sm text-gray-500 mt-2">請輸入管理密碼</p>
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <input type="password" placeholder="請輸入密碼" className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none transition text-lg" value={password} onChange={(e) => { setPassword(e.target.value); setError(false); }} />
@@ -317,7 +318,82 @@
             );
         };
 
+        const EditModal = ({ data, onClose, onSave, showMessage }) => {
+            const [formData, setFormData] = useState({ ...data });
+
+            const handleChange = (e) => {
+                const { name, value, type, checked } = e.target;
+                setFormData(prev => ({ 
+                    ...prev, 
+                    [name]: type === 'checkbox' ? checked : value 
+                }));
+            };
+
+            const handleSave = () => {
+                if (!formData.studentId || formData.studentId.trim() === '') return showMessage("請輸入學號！");
+                if (!formData.name || formData.name.trim() === '') return showMessage("請輸入姓名！");
+                if (!formData.size) return showMessage("請選擇學士服尺寸！");
+                onSave(formData);
+            };
+
+            const sizes = [
+                { id: 'S', label: 'S' },
+                { id: 'M', label: 'M' },
+                { id: 'L', label: 'L' }
+            ];
+
+            return (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[80] p-4 modal-overlay">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in flex flex-col">
+                        <div className="p-4 bg-blue-900 flex justify-between items-center text-white">
+                            <h3 className="text-lg font-bold flex items-center gap-2"><Icons.Edit className="w-5 h-5"/> 編輯登記資料</h3>
+                            <button onClick={onClose} className="hover:bg-blue-800 p-1 rounded-full"><Icons.X className="w-5 h-5"/></button>
+                        </div>
+                        <div className="p-6 space-y-5 bg-gray-50">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">學號</label>
+                                    <input type="text" name="studentId" value={formData.studentId} onChange={handleChange} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none bg-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">姓名</label>
+                                    <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none bg-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">尺寸</label>
+                                <div className="flex gap-2">
+                                    {sizes.map(s => (
+                                        <label key={s.id} className="flex-1 text-center cursor-pointer relative">
+                                            <input type="radio" name="size" value={s.id} checked={formData.size === s.id} onChange={handleChange} className="peer sr-only" />
+                                            <div className="p-2 border border-gray-300 rounded-lg bg-white peer-checked:bg-blue-50 peer-checked:border-blue-900 peer-checked:text-blue-900 font-bold text-sm transition-all shadow-sm">
+                                                {s.label}
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className={`flex items-center gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all bg-white ${formData.addCollar ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                                    <input type="checkbox" name="addCollar" checked={formData.addCollar} onChange={handleChange} className="w-5 h-5 text-green-600 rounded focus:ring-green-500 cursor-pointer" />
+                                    <span className={`font-bold text-lg ${formData.addCollar ? 'text-green-800' : 'text-gray-700'}`}>加購「假領子」</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div className="p-4 border-t flex justify-end gap-3 bg-white">
+                            <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-gray-600 font-medium hover:bg-gray-100 transition">取消</button>
+                            <button onClick={handleSave} className="px-5 py-2.5 bg-blue-900 font-medium text-white rounded-lg hover:bg-blue-800 transition shadow-sm flex items-center gap-2">
+                                <Icons.Save className="w-4 h-4"/> 儲存修改
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const AdminDashboard = ({ registrations, onLogout, onAction, showMessage, setConfirmDialog }) => {
+            const [editingDoc, setEditingDoc] = useState(null);
+            
             // 統計各尺寸數量與領結數量 (只保留 S, M, L)
             const stats = registrations.reduce((acc, curr) => {
                 if (curr.size) acc[curr.size] = (acc[curr.size] || 0) + 1;
@@ -424,9 +500,14 @@
                                                 {new Date(reg.timestamp).toLocaleString('zh-TW', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})}
                                             </td>
                                             <td className="px-5 py-4 whitespace-nowrap text-right">
-                                                <button onClick={() => handleDelete(reg.userId, reg.name)} className="btn-icon inline-flex text-red-500 p-2 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition ml-auto" title="刪除">
-                                                    <Icons.Trash2 className="w-4 h-4" />
-                                                </button>
+                                                <div className="flex justify-end gap-2">
+                                                    <button onClick={() => setEditingDoc(reg)} className="btn-icon text-blue-600 p-2 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition" title="編輯">
+                                                        <Icons.Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(reg.userId, reg.name)} className="btn-icon text-red-500 p-2 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition" title="刪除">
+                                                        <Icons.Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -434,6 +515,18 @@
                             </table>
                         </div>
                     </div>
+                    
+                    {editingDoc && (
+                        <EditModal 
+                            data={editingDoc} 
+                            onClose={() => setEditingDoc(null)} 
+                            onSave={(updatedData) => {
+                                onAction({ ...updatedData, action: 'update' });
+                                setEditingDoc(null);
+                            }} 
+                            showMessage={showMessage}
+                        />
+                    )}
                 </div>
             );
         };
@@ -535,7 +628,7 @@
                     });
             }, []);
 
-            // 處理表單送出或管理員操作 (新增/刪除)
+            // 處理表單送出或管理員操作 (新增/刪除/更新)
             const handleAction = async (payload) => {
                 // 如果未設定 GAS 網址，使用本地狀態模擬運作，確保在 Canvas 預覽中可互動
                 if (GOOGLE_SCRIPT_URL.includes("請將這裡")) {
@@ -551,6 +644,9 @@
                             } else if (payload.action === 'delete') {
                                 setRegistrations(prev => prev.filter(r => r.userId !== payload.userId));
                                 showMessage('資料已成功刪除 (測試環境模擬)');
+                            } else if (payload.action === 'update') {
+                                setRegistrations(prev => prev.map(r => r.userId === payload.userId ? { ...r, ...payload } : r));
+                                showMessage('資料已成功修改 (測試環境模擬)');
                             }
                             setIsSubmitting(false);
                             resolve(true);
@@ -573,6 +669,9 @@
                     } else if (payload.action === 'delete') {
                         setRegistrations(prev => prev.filter(r => r.userId !== payload.userId));
                         showMessage('資料已成功刪除');
+                    } else if (payload.action === 'update') {
+                        setRegistrations(prev => prev.map(r => r.userId === payload.userId ? { ...r, ...payload } : r));
+                        showMessage('資料已成功修改');
                     }
                     setIsSubmitting(false); 
                     return true;
